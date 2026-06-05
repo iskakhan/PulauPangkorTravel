@@ -1,0 +1,89 @@
+:root {
+  color-scheme: light;
+
+  /* Edit the main color palette here. The module files use these tokens. */
+  --color-page: #e9fbf8;
+  --color-shell: #063f46;
+  --color-map: #bdeff2;
+  --color-ink: #0b2f33;
+  --color-ink-soft: #123f45;
+  --color-heading: #0e4850;
+  --color-muted: #5c7e83;
+  --color-muted-strong: #3e666c;
+  --color-field-label: #184e55;
+  --color-primary: #0a8f8a;
+  --color-primary-strong: #087a7a;
+  --color-primary-bright: #16c7bd;
+  --color-primary-light: #8df3e9;
+  --color-brand-deep: #075e68;
+  --color-secondary: #ff7f6e;
+  --color-accent: #f4c95d;
+  --color-danger: #d92d20;
+  --color-danger-strong: #b42318;
+  --color-session: #8a6826;
+  --color-action-text: #0b4f57;
+  --color-placeholder: #83a2a7;
+  --color-description: #496f75;
+  --color-white: #ffffff;
+
+  /* Background image for the login hero. */
+  --image-login-hero: url("https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunset_over_Pangkor_Island.jpg");
+
+  /* Shared surface colors. */
+  --surface-glass: rgba(255, 255, 255, 0.5);
+  --surface-glass-strong: rgba(255, 255, 255, 0.66);
+  --surface-control: rgba(255, 255, 255, 0.42);
+  --surface-field: rgba(255, 255, 255, 0.78);
+  --surface-light: rgba(255, 255, 255, 0.74);
+  --line: rgba(255, 255, 255, 0.66);
+  --line-dark: rgba(6, 63, 70, 0.12);
+  --line-field: rgba(6, 63, 70, 0.14);
+  --line-soft: rgba(6, 63, 70, 0.09);
+
+  /* Gradients and effects. */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-bright) 58%, var(--color-accent));
+  --gradient-brand-mark: radial-gradient(circle at 28% 22%, var(--color-primary-light), var(--color-primary-bright) 56%, var(--color-brand-deep));
+  --gradient-destination-marker: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  --gradient-login-overlay: linear-gradient(180deg, rgba(4, 52, 58, 0.08), rgba(4, 52, 58, 0.62));
+  --gradient-login-fade: linear-gradient(180deg, rgba(233, 251, 248, 0), rgba(233, 251, 248, 0.98) 58%);
+  --shadow: 0 20px 60px rgba(6, 63, 70, 0.18);
+  --glass-shadow: 0 18px 48px rgba(6, 63, 70, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.74);
+  --control-shadow: 0 10px 26px rgba(6, 63, 70, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  --app-shell-shadow: 0 30px 90px rgba(2, 42, 48, 0.42);
+
+  /* Map colors used by CSS and static/js/map-view.js. */
+  --map-accuracy-stroke: #07847f;
+  --map-accuracy-fill: #5eead4;
+  --map-user-marker: var(--color-primary-bright);
+  --map-destination-start: var(--color-secondary);
+  --map-destination-end: var(--color-accent);
+  --map-navigation-route: #06a7b8;
+  --map-navigation-route-soft: #bff4f0;
+  --map-van: #00a6b4;
+
+  /* Location category colors. */
+  --category-beach: #0891b2;
+  --category-historical: #3f7f8f;
+  --category-temple: #e65f5c;
+  --category-jetty: #0f86c6;
+  --category-food: #c99a2e;
+  --category-activity: #11a37f;
+  --category-other: #4c7f86;
+
+  /* Sizing tokens. */
+  --radius-card: 8px;
+  --radius-app-shell: 36px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Backward-compatible aliases for older module code. */
+  --ink: var(--color-ink);
+  --muted: var(--color-muted);
+  --soft: rgba(255, 255, 255, 0.72);
+  --soft-strong: rgba(255, 255, 255, 0.86);
+  --teal: var(--color-primary);
+  --teal-bright: var(--color-primary-bright);
+  --coral: var(--color-secondary);
+  --gold: var(--color-accent);
+  --danger: var(--color-danger);
+}

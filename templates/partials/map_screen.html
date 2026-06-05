@@ -1,0 +1,31 @@
+<main id="map-screen" class="screen map-screen hidden">
+  <div id="map" aria-label="Peta Pangkor"></div>
+  <div id="map-loading" class="map-loading" aria-live="polite">
+    <span class="map-loading-spinner" aria-hidden="true"></span>
+    <strong>Memuat peta Pulau Pangkor</strong>
+    <small id="map-loading-message">Menyediakan peta dan lokasi sekitar...</small>
+  </div>
+  <div class="map-vignette" aria-hidden="true"></div>
+
+  {% include "partials/map/topbar.html" %}
+  {% include "partials/map/status_panel.html" %}
+  {% include "partials/map/permission_card.html" %}
+  {% include "partials/map/summary_card.html" %}
+  <div id="list-view-container" class="list-view-container hidden">
+    <div class="list-view-header">
+      <input type="text" id="list-search-input" class="list-search-input" data-i18n-placeholder="ui.search.placeholder" placeholder="Cari lokasi..." />
+    </div>
+    <div id="list-view-grid" class="list-view-grid"></div>
+  </div>
+
+  <div class="view-toggle-container">
+    <button id="btn-view-map" class="view-toggle-btn active" data-i18n="ui.button.map">Peta</button>
+    <button id="btn-view-list" class="view-toggle-btn" data-i18n="ui.button.list">Senarai</button>
+  </div>
+
+  {% include "partials/map/nearby_tray.html" %}
+  {% include "partials/map/destination_modal.html" %}
+  {% include "partials/map/feedback_modal.html" %}
+  {% include "partials/map/unlock_animation.html" %}
+  {% include "partials/map/toast.html" %}
+</main>

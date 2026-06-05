@@ -1,0 +1,82 @@
+<form id="login-form" class="login-card glass-panel" novalidate>
+  <div class="brand-row">
+    <span class="brand-mark" aria-hidden="true">
+      <i data-lucide="waves"></i>
+    </span>
+    <div>
+      <p id="login-kicker" class="section-kicker">Visitor Access</p>
+      <h2 id="login-form-title">Enter map</h2>
+    </div>
+  </div>
+
+  <div class="language-row glass-control">
+    <label id="language-label" for="language-select">Language</label>
+    <select id="language-select" aria-labelledby="language-label">
+      <option value="en" selected>English</option>
+      <option value="ms">Bahasa Melayu</option>
+    </select>
+  </div>
+
+  <div id="demo-key-card" class="demo-key glass-control">
+    <span class="demo-key-icon" aria-hidden="true">
+      <i data-lucide="key-round"></i>
+    </span>
+    <div>
+      <span id="demo-key-label">Test key</span>
+      <code id="demo-key-value">PANGKOR-IOS26-TEST</code>
+    </div>
+    <button id="use-test-key-button" class="small-action" type="button">
+      <i data-lucide="copy-check"></i>
+      <span id="use-test-key-label">Use key</span>
+    </button>
+  </div>
+
+  <div class="field-group">
+    <label id="visitor-name-label" for="visitor-name">Visitor name</label>
+    <div class="field-shell">
+      <i data-lucide="user-round" aria-hidden="true"></i>
+      <input
+        id="visitor-name"
+        type="text"
+        inputmode="text"
+        autocomplete="name"
+        maxlength="80"
+        placeholder="Enter your name"
+        aria-describedby="login-error"
+      />
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label id="access-key-label" for="access-key">Access key</label>
+    <div class="field-shell">
+      <i data-lucide="key-round" aria-hidden="true"></i>
+      <input
+        id="access-key"
+        type="text"
+        inputmode="text"
+        autocomplete="one-time-code"
+        autocapitalize="characters"
+        spellcheck="false"
+        placeholder="Tap Use key or paste your key"
+        aria-describedby="login-error"
+      />
+      <button
+        id="clear-key-button"
+        class="icon-button subtle hidden"
+        type="button"
+        aria-label="Clear access key"
+        title="Clear"
+      >
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+  </div>
+
+  <p id="login-error" class="message error-message hidden" role="alert"></p>
+
+  <button id="login-button" class="primary-action" type="submit" disabled>
+    <span class="button-label">Log in</span>
+    <span class="button-spinner hidden" aria-hidden="true"></span>
+  </button>
+</form>

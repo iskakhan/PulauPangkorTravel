@@ -1,0 +1,57 @@
+<section
+  id="feedback-modal"
+  class="feedback-modal hidden"
+  aria-modal="true"
+  aria-labelledby="feedback-title"
+  role="dialog"
+>
+  <form id="feedback-form" class="feedback-panel glass-panel">
+    <div class="feedback-header">
+      <div>
+        <p class="section-kicker">Maklum balas</p>
+        <h3 id="feedback-title">Sebelum log keluar</h3>
+      </div>
+      <button
+        id="feedback-close-button"
+        class="icon-button subtle"
+        type="button"
+        aria-label="Tutup maklum balas"
+        title="Tutup"
+      >
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <div class="field-group">
+      <label for="feedback-visit-comment">Komen lawatan</label>
+      <textarea
+        id="feedback-visit-comment"
+        rows="4"
+        maxlength="1000"
+        placeholder="Contoh: tempat menarik, cadangan laluan, pengalaman di Pulau Pangkor"
+      ></textarea>
+    </div>
+
+    <div class="field-group">
+      <label for="feedback-system-comment">Komen sistem</label>
+      <textarea
+        id="feedback-system-comment"
+        rows="4"
+        maxlength="1000"
+        placeholder="Contoh: peta, GPS, UI, prestasi aplikasi"
+      ></textarea>
+    </div>
+
+    <p id="feedback-error" class="message error-message hidden" role="alert"></p>
+
+    <div class="feedback-actions">
+      <button id="feedback-skip-button" class="secondary-action" type="button">
+        <span>Log keluar tanpa komen</span>
+      </button>
+      <button id="feedback-submit-button" class="primary-action" type="submit">
+        <span class="button-label">Hantar & log keluar</span>
+        <span class="button-spinner hidden" aria-hidden="true"></span>
+      </button>
+    </div>
+  </form>
+</section>

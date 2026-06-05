@@ -1,0 +1,76 @@
+@media (min-width: 520px) {
+  body {
+    padding: 18px 0;
+    background:
+      radial-gradient(circle at 50% 0, rgba(20, 184, 166, 0.22), transparent 30%),
+      var(--color-shell);
+  }
+
+  .app-frame {
+    max-width: 430px;
+    min-height: calc(100svh - 36px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--radius-app-shell);
+    box-shadow: var(--app-shell-shadow);
+  }
+
+  .screen,
+  #map {
+    min-height: calc(100svh - 36px);
+    height: calc(100svh - 36px);
+  }
+
+  .login-layout {
+    min-height: calc(100svh - 64px - var(--safe-top) - var(--safe-bottom));
+  }
+
+  .nearby-tray {
+    bottom: calc(184px + var(--safe-bottom));
+  }
+
+  .mapboxgl-ctrl-bottom-right {
+    bottom: calc(196px + var(--safe-bottom));
+  }
+}
+
+@media (max-height: 740px) {
+  .hero-copy {
+    padding-top: 12px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.1rem, 10vw, 3rem);
+  }
+
+  .login-hero {
+    min-height: clamp(132px, 25svh, 190px);
+  }
+
+  .trainer-status {
+    top: calc(92px + var(--safe-top));
+  }
+
+  .nearby-tray {
+    bottom: calc(162px + var(--safe-bottom));
+    padding: 10px;
+  }
+
+  .mapboxgl-ctrl-bottom-right {
+    bottom: calc(168px + var(--safe-bottom));
+  }
+
+  .permission-card {
+    top: calc(76px + var(--safe-top));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
