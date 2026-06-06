@@ -4,7 +4,7 @@ import {
   getLocationCategory,
   getLocationId,
   getLocationName,
-} from '../location-data.js';
+} from '../location-data.js?v=6';
 
 const CATEGORY_GLYPHS = {
   beach: 'B',

@@ -1,9 +1,9 @@
-import { refreshIcons } from '../dom.js';
-import { buildLocationCardModalContent } from '../components/location-card-modal.js';
+import { refreshIcons } from '../dom.js?v=6';
+import { buildLocationCardModalContent } from '../components/location-card-modal.js?v=6';
 import {
   getDistanceLabel,
   getLocationName,
-} from '../location-data.js';
+} from '../location-data.js?v=6';
 
 export function createDestinationModalUi(dom) {
   function openDestinationModal(options) {

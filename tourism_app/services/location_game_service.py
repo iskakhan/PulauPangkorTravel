@@ -1,4 +1,5 @@
 from tourism_app.services.errors import BadRequestError, ForbiddenError, ServiceError
+from tourism_app.services.session_service import resolve_session
 
 
 class LocationGameService:
@@ -12,6 +13,23 @@ class LocationGameService:
             return self.repository.list_active_locations()
         except Exception as exc:
             raise ServiceError(f"Gagal memuat lokasi aktif: {exc}") from exc
+
+    def list_social_media_links(self):
+        try:
+            import json
+            import os
+            from flask import current_app
+
+            root_dir = current_app.config.get("ROOT_DIR", os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+            filepath = os.path.join(root_dir, "social_media.json")
+
+            if os.path.exists(filepath):
+                with open(filepath, "r", encoding="utf-8") as f:
+                    return json.load(f)
+
+            return self.repository.list_social_media_links()
+        except Exception as exc:
+            raise ServiceError(f"Gagal memuat pautan media sosial: {exc}") from exc
 
     def get_nearby_locations(self, data):
         longitude, latitude = self._parse_coordinates(data)
@@ -41,11 +59,13 @@ class LocationGameService:
 
     def check_in_location(self, data, auth_token=None):
         session_token = data.get("session_token")
-        if not auth_token and not self.session_service.is_valid(session_token):
-            raise ForbiddenError("Log masuk diperlukan untuk unlock lokasi")
+        try:
+            session = resolve_session(self.repository, self.session_service, session_token)
+        except Exception as exc:
+            raise ServiceError(f"Gagal menyemak sesi: {exc}") from exc
 
-        if not auth_token:
-            raise ForbiddenError("Supabase Auth diperlukan untuk menyimpan visit lokasi")
+        if not session:
+            raise ForbiddenError("Log masuk diperlukan untuk unlock lokasi")
 
         location_id = self._parse_location_id(data, key="p_location_id")
         longitude, latitude = self._parse_coordinates(

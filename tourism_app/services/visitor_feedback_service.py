@@ -1,4 +1,5 @@
 from tourism_app.services.errors import BadRequestError, ServiceError, UnauthorizedError
+from tourism_app.services.session_service import resolve_session
 
 
 class VisitorFeedbackService:
@@ -8,7 +9,12 @@ class VisitorFeedbackService:
 
     def submit_feedback(self, data):
         session_token = (data.get("session_token") or "").strip()
-        if not self.session_service.is_valid(session_token):
+        try:
+            session = resolve_session(self.repository, self.session_service, session_token)
+        except Exception as exc:
+            raise ServiceError(f"Gagal menyemak sesi: {exc}") from exc
+
+        if not session:
             raise UnauthorizedError("Sesi tidak sah atau telah tamat")
 
         visit_comment = _normalize_comment(data.get("visit_comment"))

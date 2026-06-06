@@ -25,6 +25,15 @@ def verify_key():
     return jsonify(result)
 
 
+@api_blueprint.post("/session-status")
+def session_status():
+    data = request.get_json(silent=True) or {}
+    session_token = (data.get("session_token") or "").strip()
+
+    service = current_app.extensions["access_key_service"]
+    return jsonify(service.validate_session(session_token))
+
+
 @api_blueprint.get("/app-config")
 def app_config():
     demo_access_key = None
@@ -53,6 +62,12 @@ def check_location():
 def locations():
     service = current_app.extensions["location_game_service"]
     return jsonify({"locations": service.list_active_locations()})
+
+
+@api_blueprint.get("/social-media")
+def social_media():
+    service = current_app.extensions["location_game_service"]
+    return jsonify({"social_media_links": service.list_social_media_links()})
 
 
 @api_blueprint.post("/nearby-locations")

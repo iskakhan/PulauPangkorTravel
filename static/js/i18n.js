@@ -32,6 +32,9 @@ export const translations = {
     'ui.button.close': 'Tutup',
     'ui.button.directions': 'Arah Tujuan',
     'ui.button.checkin': 'Check-in Sekarang',
+    'ui.nav.map': 'Peta',
+    'ui.nav.location': 'Lokasi',
+    'ui.nav.social': 'Sosial',
     'ui.empty_list': 'Tiada lokasi dijumpai.',
     
     // Location Details
@@ -83,6 +86,9 @@ export const translations = {
     'ui.button.close': 'Close',
     'ui.button.directions': 'Directions',
     'ui.button.checkin': 'Check-in Now',
+    'ui.nav.map': 'Map',
+    'ui.nav.location': 'Locations',
+    'ui.nav.social': 'Social',
     'ui.empty_list': 'No locations found.',
     
     // Location Details

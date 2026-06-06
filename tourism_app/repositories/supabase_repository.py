@@ -46,6 +46,17 @@ class SupabaseRepository:
         records = response.data or []
         return records[0] if records else None
 
+    def get_visitor_session(self, session_token):
+        response = (
+            self.client.table("visitor_sessions")
+            .select("session_token, access_key, visitor_name, created_at")
+            .eq("session_token", session_token)
+            .limit(1)
+            .execute()
+        )
+        records = response.data or []
+        return records[0] if records else None
+
     def submit_visitor_feedback(self, session_token, visit_comment, system_comment):
         response = (
             self.client.table("visitor_sessions")
@@ -163,3 +174,12 @@ class SupabaseRepository:
         )
         records = response.data or []
         return records[0] if records else None
+
+    def list_social_media_links(self):
+        response = (
+            self.client.table("social_media_links")
+            .select("*")
+            .eq("is_active", True)
+            .execute()
+        )
+        return response.data or []

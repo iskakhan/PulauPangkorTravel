@@ -1,5 +1,6 @@
 from tourism_app.models.security_key import SecurityKey
 from tourism_app.services.errors import BadRequestError, ServiceError, UnauthorizedError
+from tourism_app.services.session_service import resolve_session
 
 
 class AccessKeyService:
@@ -56,6 +57,20 @@ class AccessKeyService:
             raise UnauthorizedError("Kunci telah digunakan")
 
         return self._create_visitor_session(security_key.access_key, normalized_name)
+
+    def validate_session(self, session_token):
+        try:
+            session = resolve_session(self.repository, self.session_service, session_token)
+        except Exception as exc:
+            raise ServiceError(f"Gagal menyemak sesi: {exc}") from exc
+
+        if not session:
+            raise UnauthorizedError("Sesi tidak sah atau telah tamat")
+
+        return {
+            **session,
+            "authenticated": True,
+        }
 
     def _create_visitor_session(self, access_key, visitor_name):
         session = self.session_service.create_session(access_key, visitor_name=visitor_name)

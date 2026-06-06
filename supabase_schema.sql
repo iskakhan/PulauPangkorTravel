@@ -177,3 +177,34 @@ grant execute on function public.semak_geofence(
   double precision,
   double precision
 ) to anon, authenticated;
+
+-- Jadual Media Sosial
+create table if not exists public.social_media_links (
+  id serial primary key,
+  platform varchar(50) not null,
+  url text not null,
+  icon_name varchar(50),
+  is_active boolean default true,
+  created_at timestamptz not null default timezone('utc'::text, now())
+);
+
+alter table public.social_media_links enable row level security;
+grant select on public.social_media_links to anon, authenticated;
+
+drop policy if exists "social_media_read_for_all" on public.social_media_links;
+create policy "social_media_read_for_all"
+on public.social_media_links
+for select
+to anon, authenticated
+using (is_active = true);
+
+-- Insert dummy data if table is empty
+insert into public.social_media_links (platform, url, icon_name)
+select * from (values
+  ('Instagram', 'https://instagram.com/pangkor', 'instagram'),
+  ('Threads', 'https://threads.net/@pangkor', 'threads'),
+  ('TikTok', 'https://tiktok.com/@pangkor', 'tiktok'),
+  ('Facebook', 'https://facebook.com/pangkor', 'facebook')
+) as t(platform, url, icon_name)
+where not exists (select 1 from public.social_media_links)
+on conflict do nothing;

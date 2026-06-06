@@ -1,4 +1,4 @@
-import { formatDistance } from './formatters.js';
+import { formatDistance } from './formatters.js?v=6';
 
 const CATEGORY_ALIASES = {
   pantai: 'beach',

@@ -6,12 +6,12 @@ import {
   getLocationDetail,
   getNearbyLocations,
   submitVisitFeedback,
+  validateSession,
   verifyAccessKey,
-} from './api.js';
-import { hasSupabaseAuthSession } from './auth.js';
-import { PANGKOR_BOUNDS, PANGKOR_SYSTEM_BUFFER_M } from './config.js';
-import { getDomElements, refreshIcons } from './dom.js';
-import { formatTime } from './formatters.js';
+} from './api.js?v=6';
+import { PANGKOR_BOUNDS, PANGKOR_SYSTEM_BUFFER_M } from './config.js?v=6';
+import { getDomElements, refreshIcons } from './dom.js?v=6';
+import { formatTime } from './formatters.js?v=6';
 import {
   getLocationId,
   getLocationName,
@@ -21,11 +21,11 @@ import {
   mergeLocationData,
   calculateDistanceMeters,
   sortLocationsByDistance,
-} from './location-data.js';
-import { createMapView } from './map-view.js';
-import { clearSession, loadSession, saveSession } from './session.js';
-import { createUi } from './ui/index.js';
-import { setLocale, getLocale, t, updateDomTranslations } from './i18n.js';
+} from './location-data.js?v=6';
+import { createMapView } from './map-view.js?v=6';
+import { clearSession, loadSession, saveSession } from './session.js?v=6';
+import { createUi } from './ui/index.js?v=6';
+import { setLocale, getLocale, t, updateDomTranslations } from './i18n.js?v=6';
 
 const NEARBY_RADIUS_M = 1000;
 const AUTO_POPUP_RADIUS_M = 50;
@@ -106,11 +106,24 @@ const mapView = createMapView({
 ui = createUi(dom, mapView, {
   onLocationClick: (location) => {
     openLocationDetail(location, { source: 'list' });
-  }
+  },
+  onTabChange: (tabName) => {
+    if (tabName === 'map') {
+      mapView.invalidateSize();
+    }
+  },
 });
 
 function getSessionToken() {
-  return sessionToken || loadSession().sessionToken;
+  if (sessionToken) {
+    return sessionToken;
+  }
+
+  const storedSession = loadSession();
+  sessionToken = storedSession.sessionToken;
+  sessionExpiresAt = storedSession.sessionExpiresAt;
+  visitorName = storedSession.visitorName;
+  return sessionToken;
 }
 
 async function loadConfig() {
@@ -127,6 +140,41 @@ async function loadConfig() {
   } catch (error) {
     console.info('Konfigurasi dev tidak tersedia:', error);
   }
+}
+
+async function hydrateStoredSession() {
+  const token = getSessionToken();
+  if (!token) {
+    return false;
+  }
+
+  try {
+    const result = await validateSession(token);
+    if (!result.ok || !result.data.authenticated) {
+      clearStoredSessionState();
+      return false;
+    }
+
+    const savedSession = saveSession({
+      ...result.data,
+      session_token: token,
+    });
+    sessionToken = savedSession.sessionToken;
+    sessionExpiresAt = savedSession.sessionExpiresAt;
+    visitorName = savedSession.visitorName;
+    return true;
+  } catch (error) {
+    console.error('Gagal menyemak sesi:', error);
+    clearStoredSessionState();
+    return false;
+  }
+}
+
+function clearStoredSessionState() {
+  clearSession();
+  sessionToken = null;
+  sessionExpiresAt = null;
+  visitorName = '';
 }
 
 async function loadLocations() {
@@ -215,6 +263,7 @@ async function handleLogin() {
     dom.visitorNameInput.value = '';
     dom.accessKeyInput.value = '';
     ui.updateLoginButtonState();
+    if (ui.resetTabs) ui.resetTabs();
     ui.showScreen('map');
     ui.setAuthState(true, visitorName);
     await enterMapScreen();
@@ -470,6 +519,7 @@ async function openLocationDetail(locationOrId, { source = 'manual' } = {}) {
   let isVisited = visitedLocationIds.has(locationId);
   let detail = {};
   let visit = null;
+  const token = getSessionToken();
 
   try {
     const detailResult = await getLocationDetail({ locationId });
@@ -480,7 +530,6 @@ async function openLocationDetail(locationOrId, { source = 'manual' } = {}) {
     }
 
     if (isInside && !isVisited && lastPosition) {
-      const token = getSessionToken();
       if (token) {
         const checkInResult = await checkInLocation({
           locationId,
@@ -514,7 +563,7 @@ async function openLocationDetail(locationOrId, { source = 'manual' } = {}) {
     ui.openDestinationModal({
       location: mergeLocationData(mergedLocation, detail.location || {}),
       detail,
-      isAuthenticated: hasSupabaseAuthSession(),
+      isAuthenticated: Boolean(token),
       isInside,
       isVisited,
       visit,
@@ -829,10 +878,7 @@ function requestLogout() {
 }
 
 function performLogout(message) {
-  clearSession();
-  sessionToken = null;
-  sessionExpiresAt = null;
-  visitorName = '';
+  clearStoredSessionState();
   window.clearInterval(sessionTimer);
   hasReceivedGpsFix = false;
   lastPosition = null;
@@ -860,6 +906,7 @@ function performLogout(message) {
     nearbyCount: nearbyLocations.length,
     unlockedCount: visitedLocationIds.size,
   });
+  if (ui.resetTabs) ui.resetTabs();
   renderAreaList(lastPosition, { mode: 'all' });
   mapView.setFollowUser(false);
   ui.hideLoginError();
@@ -1103,10 +1150,7 @@ function bindEvents() {
 
 async function boot() {
   if (sessionExpiresAt && sessionExpiresAt <= Date.now()) {
-    clearSession();
-    sessionToken = null;
-    sessionExpiresAt = null;
-    visitorName = '';
+    clearStoredSessionState();
   }
 
   refreshIcons();
@@ -1122,7 +1166,10 @@ async function boot() {
   bindEvents();
   await loadConfig();
 
-  if (sessionToken) {
+  const hasValidSession = await hydrateStoredSession();
+  ui.setAuthState(hasValidSession, visitorName);
+
+  if (hasValidSession) {
     await enterMapScreen();
   } else {
     ui.showScreen('login');

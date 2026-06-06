@@ -1,11 +1,11 @@
-import { buildDestinasiDetails } from './destinasi-details.js';
+import { buildDestinasiDetails } from './destinasi-details.js?v=6';
 import {
   getCategoryLabel,
   getDistanceLabel,
   getLocationDescription,
   getLocationId,
   getLocationName,
-} from '../location-data.js';
+} from '../location-data.js?v=6';
 
 export function buildLocationCardModalContent({
   location,

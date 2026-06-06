@@ -1,5 +1,5 @@
-import { API_BASE } from './config.js';
-import { getSupabaseAccessToken } from './auth.js';
+import { API_BASE } from './config.js?v=6';
+import { getSupabaseAccessToken } from './auth.js?v=6';
 
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
 const WEATHER_FIELDS = [
@@ -64,6 +64,20 @@ export async function verifyAccessKey(accessKey, visitorName) {
   };
 }
 
+export async function validateSession(sessionToken) {
+  const response = await fetch(`${API_BASE}/session-status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_token: sessionToken }),
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data: await readJson(response),
+  };
+}
+
 export async function submitVisitFeedback({ sessionToken, visitComment, systemComment }) {
   const response = await fetch(`${API_BASE}/visitor-feedback`, {
     method: 'POST',
@@ -98,6 +112,15 @@ export async function checkLocation({ longitude, latitude, sessionToken }) {
 
 export async function getActiveLocations() {
   const response = await fetch(`${API_BASE}/locations`);
+  return {
+    ok: response.ok,
+    status: response.status,
+    data: await readJson(response),
+  };
+}
+
+export async function getSocialMediaLinks() {
+  const response = await fetch(`${API_BASE}/social-media`);
   return {
     ok: response.ok,
     status: response.status,

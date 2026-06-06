@@ -1,4 +1,5 @@
 from tourism_app.services.errors import BadRequestError, ForbiddenError, ServiceError
+from tourism_app.services.session_service import resolve_session
 
 
 class GeofenceService:
@@ -9,7 +10,12 @@ class GeofenceService:
 
     def check_location(self, data):
         session_token = data.get("session_token")
-        if not self.session_service.is_valid(session_token):
+        try:
+            session = resolve_session(self.repository, self.session_service, session_token)
+        except Exception as exc:
+            raise ServiceError(f"Gagal menyemak sesi: {exc}") from exc
+
+        if not session:
             raise ForbiddenError("Sesi tidak sah")
 
         longitude, latitude = self._parse_coordinates(data)

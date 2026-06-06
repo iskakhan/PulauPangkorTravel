@@ -1,10 +1,10 @@
-import { createDestinationModalUi } from './destination-modal-ui.js';
-import { createFeedbackUi } from './feedback-ui.js';
-import { createLoginUi } from './login-ui.js';
-import { createMapPanelUi } from './map-panel-ui.js';
-import { createScreenUi } from './screen-ui.js';
-import { createToastUi } from './toast-ui.js';
-import { createListViewUi } from './list-view-ui.js';
+import { createDestinationModalUi } from './destination-modal-ui.js?v=6';
+import { createFeedbackUi } from './feedback-ui.js?v=6';
+import { createLoginUi } from './login-ui.js?v=6';
+import { createMapPanelUi } from './map-panel-ui.js?v=6';
+import { createScreenUi } from './screen-ui.js?v=6';
+import { createToastUi } from './toast-ui.js?v=6';
+import { createListViewUi } from './list-view-ui.js?v=6';
 
 export function createUi(dom, mapView, callbacks = {}) {
   return {

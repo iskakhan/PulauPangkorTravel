@@ -18,10 +18,42 @@
     <div id="list-view-grid" class="list-view-grid"></div>
   </div>
 
-  <div class="view-toggle-container">
-    <button id="btn-view-map" class="view-toggle-btn active" data-i18n="ui.button.map">Peta</button>
-    <button id="btn-view-list" class="view-toggle-btn" data-i18n="ui.button.list">Senarai</button>
+  <div id="social-media-container" class="social-media-container hidden">
+    <div class="social-media-header">
+      <h2>Media Sosial</h2>
+      <p>Ikuti perkembangan terkini kami</p>
+    </div>
+    <div id="social-media-list" class="social-media-list">
+      <!-- Loaded dynamically via JS -->
+    </div>
   </div>
+
+  <button
+    id="btn-toggle-ui"
+    class="btn-toggle-ui"
+    type="button"
+    aria-label="Clean view peta"
+    title="Clean view"
+    aria-pressed="false"
+  >
+    <i class="toggle-icon-min" data-lucide="maximize-2"></i>
+    <i class="toggle-icon-max hidden" data-lucide="minimize-2"></i>
+  </button>
+
+  <nav class="bottom-nav" aria-label="Navigasi utama">
+    <button id="nav-btn-map" class="bottom-nav-btn active" type="button" aria-label="Peta">
+      <span class="nav-icon"><i data-lucide="map"></i></span>
+      <span class="nav-label" data-i18n="ui.nav.map">Peta</span>
+    </button>
+    <button id="nav-btn-location" class="bottom-nav-btn" type="button" aria-label="Lokasi">
+      <span class="nav-icon"><i data-lucide="map-pin"></i></span>
+      <span class="nav-label" data-i18n="ui.nav.location">Lokasi</span>
+    </button>
+    <button id="nav-btn-social" class="bottom-nav-btn" type="button" aria-label="Sosial">
+      <span class="nav-icon"><i data-lucide="share-2"></i></span>
+      <span class="nav-label" data-i18n="ui.nav.social">Sosial</span>
+    </button>
+  </nav>
 
   {% include "partials/map/nearby_tray.html" %}
   {% include "partials/map/destination_modal.html" %}

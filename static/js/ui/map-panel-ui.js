@@ -1,7 +1,7 @@
-import { formatDistance } from '../formatters.js';
-import { buildNearbyLocationCard } from '../components/nearby-location-card.js';
-import { showUnlockAnimation as playUnlockAnimation } from '../components/unlock-animation.js';
-import { getLocationName } from '../location-data.js';
+import { formatDistance } from '../formatters.js?v=6';
+import { buildNearbyLocationCard } from '../components/nearby-location-card.js?v=6';
+import { showUnlockAnimation as playUnlockAnimation } from '../components/unlock-animation.js?v=6';
+import { getLocationName } from '../location-data.js?v=6';
 
 export function createMapPanelUi(dom) {
   function setSummary(kicker, title, description) {

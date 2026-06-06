@@ -1,4 +1,4 @@
-import { refreshIcons } from '../dom.js';
+import { refreshIcons } from '../dom.js?v=6';
 
 export function showUnlockAnimation(dom, { title, message }) {
   dom.unlockTitle.textContent = title || 'Kad lokasi dibuka';
