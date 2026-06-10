@@ -3,7 +3,7 @@ const DEFAULT_LANGUAGE = 'ms';
 const LOGIN_COPY = {
   en: {
     language: 'Language',
-    heroCopy: 'Log in to open the Pangkor map and unlock visits.',
+    heroCopy: 'Log in to explore Pangkor with Kembara Van Pink.',
     session: 'Session',
     kicker: 'Visitor Access',
     title: 'Enter map',
@@ -23,7 +23,7 @@ const LOGIN_COPY = {
   },
   ms: {
     language: 'Bahasa',
-    heroCopy: 'Log masuk untuk buka peta Pangkor dan unlock lawatan.',
+    heroCopy: 'Log masuk untuk jelajah Pangkor bersama Kembara Van Pink.',
     session: 'Sesi',
     kicker: 'Akses Pelawat',
     title: 'Masuk peta',

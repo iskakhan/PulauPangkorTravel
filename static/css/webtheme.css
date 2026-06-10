@@ -1,86 +1,87 @@
 :root {
   color-scheme: light;
 
-  /* Edit the main color palette here. The module files use these tokens. */
-  --color-page: #e9fbf8;
-  --color-shell: #063f46;
-  --color-map: #bdeff2;
-  --color-ink: #0b2f33;
-  --color-ink-soft: #123f45;
-  --color-heading: #0e4850;
-  --color-muted: #5c7e83;
-  --color-muted-strong: #3e666c;
-  --color-field-label: #184e55;
-  --color-primary: #0a8f8a;
-  --color-primary-strong: #087a7a;
-  --color-primary-bright: #16c7bd;
-  --color-primary-light: #8df3e9;
-  --color-brand-deep: #075e68;
-  --color-secondary: #ff7f6e;
-  --color-accent: #f4c95d;
+  /* ── Kembara Van Pink — Pink Colour System ──────────────────────────── */
+  --color-page: #fff0f7;
+  --color-shell: #5c1040;
+  --color-map: #fde0ef;
+  --color-ink: #2d0a1e;
+  --color-ink-soft: #4a1230;
+  --color-heading: #3a0d28;
+  --color-muted: #9c5e7a;
+  --color-muted-strong: #7a3d5c;
+  --color-field-label: #6b2648;
+  --color-primary: #e0127a;
+  --color-primary-strong: #c20f6a;
+  --color-primary-bright: #ff5ba7;
+  --color-primary-light: #ffc2df;
+  --color-brand-deep: #8b0056;
+  --color-secondary: #ff8fab;
+  --color-accent: #ffb3c6;
   --color-danger: #d92d20;
   --color-danger-strong: #b42318;
-  --color-session: #8a6826;
-  --color-action-text: #0b4f57;
-  --color-placeholder: #83a2a7;
-  --color-description: #496f75;
+  --color-session: #8a5c26;
+  --color-action-text: #6b0044;
+  --color-placeholder: #c490ab;
+  --color-description: #7a4d65;
   --color-white: #ffffff;
 
   /* Background image for the login hero. */
   --image-login-hero: url("https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunset_over_Pangkor_Island.jpg");
 
-  /* Shared surface colors. */
-  --surface-glass: rgba(255, 255, 255, 0.5);
-  --surface-glass-strong: rgba(255, 255, 255, 0.66);
-  --surface-control: rgba(255, 255, 255, 0.42);
-  --surface-field: rgba(255, 255, 255, 0.78);
-  --surface-light: rgba(255, 255, 255, 0.74);
-  --line: rgba(255, 255, 255, 0.66);
-  --line-dark: rgba(6, 63, 70, 0.12);
-  --line-field: rgba(6, 63, 70, 0.14);
-  --line-soft: rgba(6, 63, 70, 0.09);
+  /* Shared surface colors — pink tinted. */
+  --surface-glass: rgba(255, 240, 247, 0.52);
+  --surface-glass-strong: rgba(255, 245, 250, 0.72);
+  --surface-control: rgba(255, 235, 245, 0.5);
+  --surface-field: rgba(255, 250, 253, 0.88);
+  --surface-light: rgba(255, 245, 250, 0.82);
+  --line: rgba(255, 180, 210, 0.5);
+  --line-dark: rgba(92, 16, 64, 0.12);
+  --line-field: rgba(92, 16, 64, 0.13);
+  --line-soft: rgba(92, 16, 64, 0.09);
 
-  /* Gradients and effects. */
+  /* Gradients and effects — pink palette. */
   --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-bright) 58%, var(--color-accent));
   --gradient-brand-mark: radial-gradient(circle at 28% 22%, var(--color-primary-light), var(--color-primary-bright) 56%, var(--color-brand-deep));
   --gradient-destination-marker: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
-  --gradient-login-overlay: linear-gradient(180deg, rgba(4, 52, 58, 0.08), rgba(4, 52, 58, 0.62));
-  --gradient-login-fade: linear-gradient(180deg, rgba(233, 251, 248, 0), rgba(233, 251, 248, 0.98) 58%);
-  --shadow: 0 20px 60px rgba(6, 63, 70, 0.18);
-  --glass-shadow: 0 18px 48px rgba(6, 63, 70, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.74);
-  --control-shadow: 0 10px 26px rgba(6, 63, 70, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.76);
-  --app-shell-shadow: 0 30px 90px rgba(2, 42, 48, 0.42);
+  --gradient-login-overlay: linear-gradient(180deg, rgba(58, 13, 40, 0.18), rgba(92, 16, 64, 0.65));
+  --gradient-login-fade: linear-gradient(180deg, rgba(255, 240, 247, 0), rgba(255, 240, 247, 0.98) 58%);
+  --shadow: 0 20px 60px rgba(139, 0, 86, 0.18);
+  --glass-shadow: 0 18px 48px rgba(224, 18, 122, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  --control-shadow: 0 10px 26px rgba(224, 18, 122, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --app-shell-shadow: 0 30px 90px rgba(92, 16, 64, 0.42);
 
   /* Map colors used by CSS and static/js/map-view.js. */
-  --map-accuracy-stroke: #07847f;
-  --map-accuracy-fill: #5eead4;
+  --map-accuracy-stroke: #e0127a;
+  --map-accuracy-fill: #ffb3c6;
   --map-user-marker: var(--color-primary-bright);
   --map-destination-start: var(--color-secondary);
   --map-destination-end: var(--color-accent);
-  --map-navigation-route: #06a7b8;
-  --map-navigation-route-soft: #bff4f0;
-  --map-van: #ffcc00;
+  --map-navigation-route: #e0127a;
+  --map-navigation-route-soft: #ffd6e7;
+  --map-van: #ff69b4;
 
-  /* Location category colors. */
+  /* Location category colors — warm, harmonious with pink. */
   --category-beach: #0891b2;
-  --category-historical: #3f7f8f;
+  --category-historical: #7c5a2e;
   --category-temple: #e65f5c;
   --category-jetty: #0f86c6;
   --category-food: #c99a2e;
-  --category-activity: #11a37f;
-  --category-other: #4c7f86;
+  --category-activity: #8b5cf6;
+  --category-other: #9c5e7a;
 
-  /* Sizing tokens. */
-  --radius-card: 8px;
-  --radius-app-shell: 36px;
+  /* Sizing tokens — iOS-inspired. */
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --radius-app-shell: 44px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* Backward-compatible aliases for older module code. */
   --ink: var(--color-ink);
   --muted: var(--color-muted);
-  --soft: rgba(255, 255, 255, 0.72);
-  --soft-strong: rgba(255, 255, 255, 0.86);
+  --soft: rgba(255, 240, 247, 0.72);
+  --soft-strong: rgba(255, 240, 247, 0.88);
   --teal: var(--color-primary);
   --teal-bright: var(--color-primary-bright);
   --coral: var(--color-secondary);

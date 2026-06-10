@@ -8,10 +8,10 @@ import {
   submitVisitFeedback,
   validateSession,
   verifyAccessKey,
-} from './api.js?v=6';
-import { PANGKOR_BOUNDS, PANGKOR_SYSTEM_BUFFER_M } from './config.js?v=6';
-import { getDomElements, refreshIcons } from './dom.js?v=6';
-import { formatTime } from './formatters.js?v=6';
+} from './api.js?v=7';
+import { PANGKOR_BOUNDS, PANGKOR_SYSTEM_BUFFER_M } from './config.js?v=7';
+import { getDomElements, refreshIcons } from './dom.js?v=7';
+import { formatTime } from './formatters.js?v=7';
 import {
   getLocationId,
   getLocationName,
@@ -21,11 +21,12 @@ import {
   mergeLocationData,
   calculateDistanceMeters,
   sortLocationsByDistance,
-} from './location-data.js?v=6';
-import { createMapView } from './map-view.js?v=6';
-import { clearSession, loadSession, saveSession } from './session.js?v=6';
-import { createUi } from './ui/index.js?v=6';
-import { setLocale, getLocale, t, updateDomTranslations } from './i18n.js?v=6';
+} from './location-data.js?v=7';
+import { createMapView } from './map-view.js?v=7';
+import { clearSession, loadSession, saveSession } from './session.js?v=7';
+import { createUi } from './ui/index.js?v=7';
+import { setLocale, getLocale, t, updateDomTranslations } from './i18n.js?v=7';
+import { initChatWidget } from './chat-widget.js?v=7';
 
 const NEARBY_RADIUS_M = 1000;
 const AUTO_POPUP_RADIUS_M = 50;
@@ -881,6 +882,7 @@ function performLogout(message) {
   clearStoredSessionState();
   window.clearInterval(sessionTimer);
   hasReceivedGpsFix = false;
+  hasLoadedLocations = false;
   lastPosition = null;
   lastWeatherPosition = null;
   isOutsidePangkorArea = false;
@@ -1168,6 +1170,10 @@ async function boot() {
 
   const hasValidSession = await hydrateStoredSession();
   ui.setAuthState(hasValidSession, visitorName);
+
+  // Initialise the AI chat widget on the map screen
+  const mapScreen = document.getElementById('map-screen');
+  initChatWidget(mapScreen);
 
   if (hasValidSession) {
     await enterMapScreen();

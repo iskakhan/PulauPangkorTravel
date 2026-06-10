@@ -10,18 +10,18 @@
   right: 0;
   height: var(--bottom-nav-space);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.96)),
-    rgba(255, 255, 255, 0.9);
-  -webkit-backdrop-filter: blur(22px) saturate(1.35);
-  backdrop-filter: blur(22px) saturate(1.35);
-  border-top: 1px solid rgba(6, 63, 70, 0.1);
+    linear-gradient(180deg, rgba(255, 240, 247, 0.82), rgba(255, 245, 250, 0.97)),
+    rgba(255, 240, 247, 0.9);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  border-top: 1px solid rgba(224, 18, 122, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-around;
   gap: 6px;
   padding: 8px 12px calc(8px + var(--safe-bottom));
   z-index: 980;
-  box-shadow: 0 -16px 38px rgba(6, 63, 70, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: 0 -16px 38px rgba(224, 18, 122, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .bottom-nav-btn {
@@ -57,7 +57,7 @@
 
 .bottom-nav-btn.active {
   color: var(--color-primary);
-  background: rgba(20, 184, 166, 0.1);
+  background: rgba(224, 18, 122, 0.1);
 }
 
 .bottom-nav-btn.active::before {
@@ -83,7 +83,7 @@
 }
 
 .bottom-nav-btn:focus-visible {
-  outline: 3px solid rgba(20, 184, 166, 0.28);
+  outline: 3px solid rgba(224, 18, 122, 0.28);
   outline-offset: -3px;
 }
 
@@ -117,7 +117,7 @@
 .btn-toggle-ui.is-active {
   color: var(--color-white);
   background:
-    linear-gradient(135deg, rgba(15, 118, 110, 0.96), rgba(20, 184, 166, 0.86)),
+    linear-gradient(135deg, rgba(224, 18, 122, 0.96), rgba(255, 91, 167, 0.86)),
     var(--surface-control);
 }
 
@@ -135,7 +135,7 @@
   left: 0;
   right: 0;
   bottom: var(--bottom-nav-space, 76px);
-  background: #f6faf9;
+  background: #fff5f9;
   z-index: 930;
   display: flex;
   flex-direction: column;
@@ -196,7 +196,7 @@
   width: 44px;
   height: 44px;
   border-radius: 8px;
-  background: rgba(20, 184, 166, 0.13);
+  background: rgba(224, 18, 122, 0.1);
   display: grid;
   place-items: center;
   flex: 0 0 auto;

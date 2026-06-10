@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60" fill="none">
+  <rect width="120" height="60" rx="8" fill="white" fill-opacity="0.15"/>
+  <text x="60" y="22" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" font-weight="700" fill="white" fill-opacity="0.8" letter-spacing="1">SPONSOR</text>
+  <text x="60" y="38" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="800" fill="white">SP3</text>
+  <rect x="20" y="45" width="80" height="2" rx="1" fill="white" fill-opacity="0.3"/>
+</svg>

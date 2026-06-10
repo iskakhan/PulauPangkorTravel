@@ -1,0 +1,277 @@
+/* ── Kembara Van Pink — AI Chat Widget ─────────────────────────────────── */
+
+/* Floating chat bubble button */
+.chat-bubble-btn {
+  position: absolute;
+  right: 16px;
+  bottom: calc(var(--bottom-nav-space, 76px) + 60px);
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: none;
+  background: var(--gradient-primary);
+  color: var(--color-white);
+  box-shadow: 0 8px 32px rgba(224, 18, 122, 0.42), 0 2px 8px rgba(224, 18, 122, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 960;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chat-bubble-btn:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 16px 44px rgba(224, 18, 122, 0.48);
+}
+
+.chat-bubble-btn:active {
+  transform: scale(0.94);
+}
+
+.chat-bubble-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Notification dot — hidden by default */
+.chat-bubble-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid var(--color-primary);
+  display: none;
+}
+
+.chat-bubble-btn.has-notification .chat-bubble-dot {
+  display: block;
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* Chat panel backdrop */
+.chat-panel-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 995;
+  background: rgba(45, 10, 30, 0.38);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
+.chat-panel-backdrop.is-open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Chat panel slide-up sheet */
+.chat-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 996;
+  height: 86svh;
+  border-radius: 22px 22px 0 0;
+  background:
+    linear-gradient(180deg, rgba(255, 240, 247, 0.98), rgba(255, 248, 252, 0.99));
+  border: 1px solid rgba(224, 18, 122, 0.16);
+  border-bottom: none;
+  box-shadow: 0 -24px 72px rgba(224, 18, 122, 0.18), 0 -4px 16px rgba(224, 18, 122, 0.08);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+  backdrop-filter: blur(32px) saturate(1.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(100%);
+  transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.chat-panel.is-open {
+  transform: translateY(0);
+}
+
+/* Handle bar */
+.chat-panel-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(224, 18, 122, 0.22);
+  margin: 10px auto 0;
+  flex: 0 0 auto;
+}
+
+/* Panel header */
+.chat-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(224, 18, 122, 0.1);
+  flex: 0 0 auto;
+}
+
+.chat-panel-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--gradient-primary);
+  color: white;
+  flex: 0 0 auto;
+  box-shadow: 0 6px 18px rgba(224, 18, 122, 0.28);
+}
+
+.chat-panel-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.chat-panel-title-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 760;
+  color: var(--color-heading);
+  line-height: 1.2;
+}
+
+.chat-panel-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.76rem;
+  color: var(--color-muted);
+  font-weight: 640;
+}
+
+.chat-panel-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: none;
+  border-radius: 999px;
+  background: rgba(224, 18, 122, 0.08);
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+  flex: 0 0 auto;
+}
+
+.chat-panel-close:hover {
+  background: rgba(224, 18, 122, 0.15);
+}
+
+.chat-panel-close:active {
+  transform: scale(0.92);
+}
+
+.chat-panel-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* iframe container */
+.chat-panel-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.chat-panel-body iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+}
+
+/* Loading state inside iframe area */
+.chat-panel-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(255, 240, 247, 0.95);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.chat-panel-loading.hidden {
+  opacity: 0;
+}
+
+.chat-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(224, 18, 122, 0.18);
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  animation: spin 700ms linear infinite;
+}
+
+.chat-panel-loading p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  font-weight: 640;
+}
+
+/* Open-in-browser link */
+.chat-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px calc(10px + var(--safe-bottom, 0px));
+  border-top: 1px solid rgba(224, 18, 122, 0.08);
+  flex: 0 0 auto;
+}
+
+.chat-panel-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(224, 18, 122, 0.08);
+  transition: background 0.18s ease;
+}
+
+.chat-panel-footer a:hover {
+  background: rgba(224, 18, 122, 0.14);
+}
+
+.chat-panel-footer a svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Hide chat bubble in clean view mode */
+#map-screen.is-clean-view .chat-bubble-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
