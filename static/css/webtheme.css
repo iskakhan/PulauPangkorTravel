@@ -27,7 +27,7 @@
   --color-white: #ffffff;
 
   /* Background image for the login hero. */
-  --image-login-hero: url("https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunset_over_Pangkor_Island.jpg");
+  --image-login-hero: url("/static/assets/logos/main.jpeg");
 
   /* Shared surface colors — pink tinted. */
   --surface-glass: rgba(255, 240, 247, 0.52);

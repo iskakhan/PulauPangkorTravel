@@ -1,11 +1,19 @@
 <div class="login-hero glass-panel">
-  <div class="hero-copy">
-    <span class="eyebrow">Pangkor</span>
-    <h1 id="login-title">Kembara Van Pink</h1>
-    <p id="login-hero-copy">Log masuk untuk buka peta Pangkor dan unlock lawatan.</p>
-  </div>
-  <div class="hero-dock">
-    <span><i data-lucide="map-pin"></i>GPS</span>
-    <span><i data-lucide="shield-check"></i><span id="login-hero-session">Session</span></span>
+  <img
+    class="login-hero-image"
+    src="{{ url_for('static', filename='assets/logos/main.jpeg') }}"
+    alt="Pangkor Kembara Van Pink"
+    loading="eager"
+  />
+  <div class="login-hero-content" aria-hidden="true">
+    <div class="hero-copy">
+      <span class="eyebrow">Pangkor</span>
+      <h1 id="login-title">Kembara Van Pink</h1>
+      <p id="login-hero-copy">Log masuk untuk buka peta Pangkor dan unlock lawatan.</p>
+    </div>
+    <div class="hero-dock">
+      <span><i data-lucide="map-pin"></i>GPS</span>
+      <span><i data-lucide="shield-check"></i><span id="login-hero-session">Session</span></span>
+    </div>
   </div>
 </div>

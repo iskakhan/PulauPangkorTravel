@@ -985,7 +985,7 @@ async function enterMapScreen() {
   mapView.invalidateSize();
   startTracking();
 
-  if (!hasLoadedLocations) {
+  if (!hasLoadedLocations || activeLocations.length === 0) {
     ui.setLoadingNearby();
     await loadLocations();
   } else {
