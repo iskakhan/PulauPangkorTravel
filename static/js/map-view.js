@@ -1,5 +1,5 @@
 import { DEFAULT_CENTER, PANGKOR_BOUNDS } from './config.js?v=9';
-import { buildLocationPopupHtml, createLocationPinElement } from './components/location-pin.js?v=9';
+import { buildLocationPopupHtml, createLocationPinElement } from './components/location-pin.js?v=16';
 import { createUserMarkerElement } from './components/user-marker.js?v=9';
 import {
   enrichLocationsWithNearby,
@@ -8,7 +8,7 @@ import {
   getLocationLatitude,
   getLocationLongitude,
   getLocationName,
-} from './location-data.js?v=9';
+} from './location-data.js?v=16';
 import { getThemeColor } from './theme.js?v=9';
 
 const DEFAULT_MAPBOX_STYLE = 'mapbox://styles/mapbox/streets-v12';
@@ -25,6 +25,9 @@ const BUILDINGS_LAYER_ID = 'pangkor-3d-buildings';
 const BUILDINGS_GLOW_LAYER_ID = 'pangkor-3d-building-glow';
 const TERRAIN_SOURCE_ID = 'pangkor-3d-terrain';
 const LOCATION_3D_SOURCE_ID = 'pangkor-location-3d-pins';
+const LOCATION_POINT_SOURCE_ID = 'pangkor-location-points';
+const LOCATION_POINT_HALO_LAYER_ID = 'pangkor-location-point-halo';
+const LOCATION_POINT_LAYER_ID = 'pangkor-location-point';
 const USER_3D_SOURCE_ID = 'pangkor-user-3d-pin';
 const LOCATION_3D_HALO_LAYER_ID = 'pangkor-location-3d-halo';
 const LOCATION_3D_COLUMN_LAYER_ID = 'pangkor-location-3d-column';
@@ -291,6 +294,8 @@ export function createMapView({
     map.on('idle', markMapReady);
     map.on('rotate', updateUserMarkerScreenHeading);
     map.on('dragstart', handleMapDragStart);
+    map.on('click', handleMapLocationClick);
+    map.on('mousemove', handleMapLocationHover);
     map.on('rotatestart', handleManualRotateStart);
     map.on('rotateend', handleManualRotateEnd);
     map.on('error', handleMapError);
@@ -336,6 +341,7 @@ export function createMapView({
 
     const enrichedLocations = enrichLocationsWithNearby(activeLocations, nearbyById, visitedLocationIds);
     const navigationTargetId = getLocationId(navigationTarget);
+    updateLocationPointPins(enrichedLocations);
     updateLocation3dPins(enrichedLocations);
 
     enrichedLocations.forEach((location) => {
@@ -573,7 +579,9 @@ export function createMapView({
 
   function handleStyleReady() {
     ensureMapSourcesAndLayers();
-    updateLocation3dPins(enrichLocationsWithNearby(activeLocations, nearbyById, visitedLocationIds));
+    const enrichedLocations = enrichLocationsWithNearby(activeLocations, nearbyById, visitedLocationIds);
+    updateLocationPointPins(enrichedLocations);
+    updateLocation3dPins(enrichedLocations);
     renderNavigationOverlay(lastPosition);
     if (lastPosition) {
       const positionLngLat = getPositionLngLat(lastPosition);
@@ -584,9 +592,7 @@ export function createMapView({
     update3dTerrain();
     renderLocationMarkers();
     setPerspectiveMode(isPerspectiveMode);
-    if (!mapboxAccessToken || hasUsedRasterFallback) {
-      window.setTimeout(markMapReady, 350);
-    }
+    window.setTimeout(markMapReady, 350);
   }
 
   function handleMapError(event) {
@@ -975,11 +981,13 @@ export function createMapView({
     addGeoJsonSource(NAVIGATION_ROUTE_SOURCE_ID);
     addGeoJsonSource(ARRIVAL_RADIUS_SOURCE_ID);
     addGeoJsonSource(ACCURACY_SOURCE_ID);
+    addGeoJsonSource(LOCATION_POINT_SOURCE_ID);
     addGeoJsonSource(LOCATION_3D_SOURCE_ID);
     addGeoJsonSource(USER_3D_SOURCE_ID);
     addRouteLayers();
     addRadiusLayers();
     addAccuracyLayers();
+    addLocationPointLayers();
     addLocation3dLayers();
     addUser3dLayers();
     update3dPinVisibility();
@@ -1031,6 +1039,45 @@ export function createMapView({
           'line-opacity': 0.92,
         },
       });
+    }
+  }
+
+  function addLocationPointLayers() {
+    const beforeLayerId = findFirstSymbolLayerId();
+
+    if (!map.getLayer(LOCATION_POINT_HALO_LAYER_ID)) {
+      map.addLayer(
+        {
+          id: LOCATION_POINT_HALO_LAYER_ID,
+          type: 'circle',
+          source: LOCATION_POINT_SOURCE_ID,
+          paint: {
+            'circle-radius': ['case', ['boolean', ['get', 'target'], false], 19, 15],
+            'circle-color': ['to-color', ['get', 'color'], '#0f766e'],
+            'circle-opacity': 0.24,
+            'circle-blur': 0.35,
+          },
+        },
+        beforeLayerId,
+      );
+    }
+
+    if (!map.getLayer(LOCATION_POINT_LAYER_ID)) {
+      map.addLayer(
+        {
+          id: LOCATION_POINT_LAYER_ID,
+          type: 'circle',
+          source: LOCATION_POINT_SOURCE_ID,
+          paint: {
+            'circle-radius': ['case', ['boolean', ['get', 'target'], false], 10, 8],
+            'circle-color': ['to-color', ['get', 'color'], '#0f766e'],
+            'circle-stroke-color': '#ffffff',
+            'circle-stroke-width': 3,
+            'circle-opacity': 1,
+          },
+        },
+        beforeLayerId,
+      );
     }
   }
 
@@ -1210,6 +1257,66 @@ export function createMapView({
     }).filter(Boolean);
 
     setGeoJsonSourceData(LOCATION_3D_SOURCE_ID, featureCollection(features));
+  }
+
+  function updateLocationPointPins(locations) {
+    if (!map || !isStyleReady()) {
+      return;
+    }
+
+    const navigationTargetId = getLocationId(navigationTarget);
+    const features = (Array.isArray(locations) ? locations : []).map((location) => {
+      const lngLat = getLocationLngLat(location);
+      if (!lngLat) {
+        return null;
+      }
+
+      const locationId = getLocationId(location);
+      return {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: lngLat,
+        },
+        properties: {
+          id: locationId,
+          color: getLocation3dColor(location),
+          target: Boolean(navigationTargetId && locationId === navigationTargetId),
+        },
+      };
+    }).filter(Boolean);
+
+    setGeoJsonSourceData(LOCATION_POINT_SOURCE_ID, featureCollection(features));
+  }
+
+  function handleMapLocationClick(event) {
+    if (!map?.getLayer(LOCATION_POINT_LAYER_ID)) {
+      return;
+    }
+
+    const [feature] = map.queryRenderedFeatures(event.point, {
+      layers: [LOCATION_POINT_LAYER_ID],
+    });
+    const locationId = String(feature?.properties?.id || '');
+    if (!locationId) {
+      return;
+    }
+
+    const location = activeLocations.find((item) => getLocationId(item) === locationId);
+    if (location) {
+      onLocationClick?.(location);
+    }
+  }
+
+  function handleMapLocationHover(event) {
+    if (!map?.getLayer(LOCATION_POINT_LAYER_ID)) {
+      return;
+    }
+
+    const hasLocation = map.queryRenderedFeatures(event.point, {
+      layers: [LOCATION_POINT_LAYER_ID],
+    }).length > 0;
+    map.getCanvas().style.cursor = hasLocation ? 'pointer' : '';
   }
 
   function updateUser3dPin(lngLat) {

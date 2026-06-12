@@ -1,4 +1,4 @@
-import { getLocationId, getLocationName, getLocationCategory, getDistanceLabel, getDistanceMeters, getLocationImageUrls } from '../location-data.js?v=11';
+import { getLocationId, getLocationName, getLocationCategory, getDistanceLabel, getDistanceMeters, getLocationImageUrls } from '../location-data.js?v=16';
 import { getSocialMediaLinks } from '../api.js?v=11';
 import { refreshIcons } from '../dom.js?v=9';
 
@@ -40,6 +40,7 @@ export function createListViewUi(dom, callbacks = {}) {
     }
 
     locations.forEach(location => {
+      const title = getLocationName(location);
       const imageUrls = getLocationImageUrls(location);
       imageUrls.push('/static/assets/background.png');
 
@@ -47,7 +48,7 @@ export function createListViewUi(dom, callbacks = {}) {
       card.className = 'list-card';
       card.setAttribute('role', 'button');
       card.setAttribute('tabindex', '0');
-      card.setAttribute('aria-label', `Lihat ${getLocationName(location)}`);
+      card.setAttribute('aria-label', `Lihat ${title}`);
       card.dataset.locationId = getLocationId(location);
 
       const distance = getDistanceMeters(location);
@@ -55,10 +56,10 @@ export function createListViewUi(dom, callbacks = {}) {
 
       card.innerHTML = `
         <div class="list-card-image">
-          <img class="list-card-img" src="${escapeAttr(imageUrls[0])}" alt="${escapeAttr(getLocationName(location))}" decoding="async" />
+          <img class="list-card-img" src="${escapeAttr(imageUrls[0])}" alt="${escapeAttr(title)}" loading="lazy" decoding="async" />
         </div>
         <div class="list-card-content">
-          <div class="list-card-title">${escapeHtml(getLocationName(location))}</div>
+          <div class="list-card-title">${escapeHtml(title)}</div>
           <div class="list-card-distance">${escapeHtml(distanceLabel)}</div>
         </div>
       `;

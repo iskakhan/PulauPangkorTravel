@@ -88,10 +88,10 @@ export function getLocationImageUrls(location) {
     location?.photo_url,
     destinasi?.featured_image_url,
     destinasi?.banner_image_url,
-    Array.isArray(location?.senarai_gambar) ? location.senarai_gambar[0] : '',
-    Array.isArray(location?.images) ? location.images[0] : '',
-    Array.isArray(destinasi?.senarai_gambar) ? destinasi.senarai_gambar[0] : '',
-    Array.isArray(destinasi?.images) ? destinasi.images[0] : '',
+    ...(Array.isArray(location?.senarai_gambar) ? location.senarai_gambar : []),
+    ...(Array.isArray(location?.images) ? location.images : []),
+    ...(Array.isArray(destinasi?.senarai_gambar) ? destinasi.senarai_gambar : []),
+    ...(Array.isArray(destinasi?.images) ? destinasi.images : []),
   ];
 
   return [...new Set(candidates.map(safeUrl).filter(Boolean))];

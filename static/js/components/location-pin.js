@@ -3,9 +3,8 @@ import {
   getDistanceLabel,
   getLocationCategory,
   getLocationId,
-  getLocationImageUrl,
   getLocationName,
-} from '../location-data.js?v=9';
+} from '../location-data.js?v=16';
 
 const CATEGORY_GLYPHS = {
   beach: 'B',
@@ -19,12 +18,10 @@ const CATEGORY_GLYPHS = {
 
 export function createLocationPinElement(location, { onClick } = {}) {
   const category = getLocationCategory(location);
-  const imageUrl = getLocationImageUrl(location);
   const stateClasses = [
     location.is_navigation_target ? 'is-navigation-target' : '',
     location.is_unlockable ? 'is-unlockable' : '',
     location.is_visited ? 'is-visited' : '',
-    imageUrl ? 'has-image' : '',
   ].filter(Boolean).join(' ');
   const element = document.createElement('button');
   element.type = 'button';
@@ -32,13 +29,7 @@ export function createLocationPinElement(location, { onClick } = {}) {
   element.title = buildPlainTooltip(location);
   element.setAttribute('aria-label', `${getLocationName(location)}. ${buildPlainTooltip(location)}`);
 
-  element.innerHTML = imageUrl ? `
-    <span class="location-pin-card">
-      <img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(getLocationName(location))}" loading="lazy" />
-      <span class="location-pin-card-label">${escapeAttr(getLocationName(location))}</span>
-    </span>
-    <span class="location-pin-check" aria-hidden="true"></span>
-  ` : `
+  element.innerHTML = `
     <span class="location-pin-shadow" aria-hidden="true"></span>
     <span class="location-pin-orbit" aria-hidden="true"></span>
     <span class="location-pin-column" aria-hidden="true"></span>

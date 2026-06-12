@@ -4,7 +4,7 @@ import { createLoginUi } from './login-ui.js?v=9';
 import { createMapPanelUi } from './map-panel-ui.js?v=9';
 import { createScreenUi } from './screen-ui.js?v=9';
 import { createToastUi } from './toast-ui.js?v=9';
-import { createListViewUi } from './list-view-ui.js?v=11';
+import { createListViewUi } from './list-view-ui.js?v=16';
 
 export function createUi(dom, mapView, callbacks = {}) {
   return {

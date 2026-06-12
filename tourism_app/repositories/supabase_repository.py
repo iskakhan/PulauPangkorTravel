@@ -57,6 +57,15 @@ class SupabaseRepository:
         records = response.data or []
         return records[0] if records else None
 
+    def delete_visitor_session(self, session_token):
+        response = (
+            self.client.table("visitor_sessions")
+            .delete()
+            .eq("session_token", session_token)
+            .execute()
+        )
+        return bool(response.data)
+
     def submit_visitor_feedback(self, session_token, visit_comment, system_comment):
         response = (
             self.client.table("visitor_sessions")

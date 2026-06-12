@@ -48,15 +48,18 @@ class AccessKeyService:
         if security_key.is_expired(self.key_ttl):
             raise UnauthorizedError("Masa kunci telah tamat")
 
+        session = self._create_visitor_session(security_key.access_key, normalized_name)
         try:
             is_updated = self.repository.mark_security_key_used(security_key.id)
         except Exception as exc:
+            self._discard_visitor_session(session["session_token"])
             raise ServiceError(f"Gagal mengemas kini kunci: {exc}") from exc
 
         if not is_updated:
+            self._discard_visitor_session(session["session_token"])
             raise UnauthorizedError("Kunci telah digunakan")
 
-        return self._create_visitor_session(security_key.access_key, normalized_name)
+        return session
 
     def validate_session(self, session_token):
         try:
@@ -81,9 +84,17 @@ class AccessKeyService:
                 visitor_name=visitor_name,
             )
         except Exception as exc:
+            self.session_service.end_session(session["session_token"])
             raise ServiceError(f"Gagal menyimpan nama pelawat: {exc}") from exc
 
         return session
+
+    def _discard_visitor_session(self, session_token):
+        self.session_service.end_session(session_token)
+        try:
+            self.repository.delete_visitor_session(session_token)
+        except Exception:
+            pass
 
 
 def _normalize_visitor_name(visitor_name):

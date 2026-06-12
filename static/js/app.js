@@ -6,7 +6,6 @@ import {
   getLocationDetail,
   getNearbyLocations,
   submitVisitFeedback,
-  validateSession,
   verifyAccessKey,
 } from './api.js?v=11';
 import { PANGKOR_BOUNDS, PANGKOR_SYSTEM_BUFFER_M } from './config.js?v=9';
@@ -22,20 +21,18 @@ import {
   mergeLocationData,
   calculateDistanceMeters,
   sortLocationsByDistance,
-} from './location-data.js?v=11';
-import { createMapView } from './map-view.js?v=9';
-import { clearSession, loadSession, saveSession } from './session.js?v=9';
-import { createUi } from './ui/index.js?v=11';
+} from './location-data.js?v=15';
+import { createMapView } from './map-view.js?v=16';
+import { clearSession } from './session.js?v=16';
+import { createUi } from './ui/index.js?v=16';
 import { setLocale, getLocale, t, updateDomTranslations } from './i18n.js?v=9';
 import { initChatWidget } from './chat-widget.js?v=9';
-import { registerServiceWorker, cacheLocations, getCachedLocations } from './offline.js?v=11';
 import { fetchSocialProofStats, buildSocialProofBanner } from './social-proof.js?v=9';
 
 const NEARBY_RADIUS_M = 1000;
 const AUTO_POPUP_RADIUS_M = 50;
 const WEATHER_REFRESH_MS = 10 * 60 * 1000;
 const WEATHER_MOVE_REFRESH_M = 150;
-const VISITED_LOCATION_IDS_KEY = 'visited_location_ids';
 const GPS_TIMEOUT_MS = 30000;
 const GPS_HIGH_ACCURACY_OPTIONS = {
   enableHighAccuracy: true,
@@ -61,7 +58,7 @@ let nearbyLocations = [];
 let locationsById = new Map();
 let nearbyById = new Map();
 let autoPopupLocationIds = new Set();
-let visitedLocationIds = loadVisitedLocationIds();
+let visitedLocationIds = new Set();
 let currentLocation = null;
 let navigationLocation = null;
 let navigationLocationId = null;
@@ -87,10 +84,9 @@ let loginPromise = null;
 let sessionTimer = null;
 let watchId = null;
 
-const session = loadSession();
-let sessionToken = session.sessionToken;
-let sessionExpiresAt = session.sessionExpiresAt;
-let visitorName = session.visitorName;
+let sessionToken = null;
+let sessionExpiresAt = null;
+let visitorName = '';
 
 let ui;
 const mapView = createMapView({
@@ -124,14 +120,6 @@ ui = createUi(dom, mapView, {
 });
 
 function getSessionToken() {
-  if (sessionToken) {
-    return sessionToken;
-  }
-
-  const storedSession = loadSession();
-  sessionToken = storedSession.sessionToken;
-  sessionExpiresAt = storedSession.sessionExpiresAt;
-  visitorName = storedSession.visitorName;
   return sessionToken;
 }
 
@@ -165,38 +153,6 @@ async function renderSocialProofBanner() {
   }
 }
 
-async function hydrateStoredSession() {
-  const token = getSessionToken();
-  if (!token) {
-    return false;
-  }
-
-  if (sessionExpiresAt && sessionExpiresAt > Date.now()) {
-    return true;
-  }
-
-  try {
-    const result = await validateSession(token);
-
-    if (!result.ok || !result.data?.authenticated) {
-      clearStoredSessionState();
-      return false;
-    }
-
-    const savedSession = saveSession({
-      ...result.data,
-      session_token: token,
-    });
-    sessionToken = savedSession.sessionToken;
-    sessionExpiresAt = savedSession.sessionExpiresAt;
-    visitorName = savedSession.visitorName;
-    return true;
-  } catch (error) {
-    console.warn('[Session] Semakan sesi gagal sementara, menggunakan sesi tersimpan:', error);
-    return Boolean(sessionToken);
-  }
-}
-
 function clearStoredSessionState() {
   clearSession();
   sessionToken = null;
@@ -204,9 +160,13 @@ function clearStoredSessionState() {
   visitorName = '';
 }
 
-async function loadLocations() {
+async function loadLocations({ force = false } = {}) {
   if (locationsLoadPromise) {
     return locationsLoadPromise;
+  }
+
+  if (!force && hasLoadedLocations && activeLocations.length > 0) {
+    return true;
   }
 
   locationsLoadPromise = loadLocationsOnce();
@@ -221,35 +181,8 @@ async function loadLocationsOnce() {
   try {
     const result = await getActiveLocationsWithRetry();
     if (!result.ok) {
-      let cachedLocations = [];
-      try {
-        cachedLocations = await getCachedLocations();
-      } catch (cacheError) {
-        console.warn('[Offline] Gagal baca cache lokasi:', cacheError);
-      }
-
-      if (cachedLocations.length) {
-        activeLocations = cachedLocations;
-        locationsById = new Map(activeLocations.map((location) => [getLocationId(location), location]));
-        mapView.setLocations(activeLocations);
-        if (ui.setListLocations) {
-          ui.setListLocations(activeLocations);
-        }
-        syncLocationStates();
-        hasLoadedLocations = true;
-        ui.updateGameStatus({
-          position: lastPosition,
-          nearbyCount: activeLocations.length,
-          unlockedCount: visitedLocationIds.size,
-        });
-        renderAreaList(lastPosition, { mode: 'all' });
-        ui.setSummary('Mod luar talian', 'Senarai cache', `${activeLocations.length} destinasi tersedia dari cache.`);
-        return;
-      }
-
-      ui.setSummary('Lokasi', 'Senarai belum tersedia', result.data.error || 'Semak sambungan server lokasi.');
-      ui.renderNearbyLocations([], { mode: 'all' });
-      return;
+      ui.setSummary('Lokasi', 'Data Supabase gagal dimuat', result.data.error || 'Semak sambungan server lokasi.');
+      return false;
     }
 
     activeLocations = result.data.locations || [];
@@ -267,42 +200,11 @@ async function loadLocationsOnce() {
     });
     renderAreaList(lastPosition, { mode: 'all' });
     ui.setSummary('Peta aktif', 'Jelajah Pangkor', `${activeLocations.length} kawasan dan lokasi menarik dimuat.`);
-
-    if (activeLocations.length) {
-      cacheLocations(activeLocations).catch((cacheError) => {
-        console.warn('[Offline] Cache lokasi gagal:', cacheError);
-      });
-    }
+    return true;
   } catch (error) {
     console.error(error);
-    let cachedLocations = [];
-    try {
-      cachedLocations = await getCachedLocations();
-    } catch (cacheError) {
-      console.warn('[Offline] Gagal baca cache lokasi:', cacheError);
-    }
-
-    if (cachedLocations.length) {
-      activeLocations = cachedLocations;
-      locationsById = new Map(activeLocations.map((location) => [getLocationId(location), location]));
-      mapView.setLocations(activeLocations);
-      if (ui.setListLocations) {
-        ui.setListLocations(activeLocations);
-      }
-      syncLocationStates();
-      hasLoadedLocations = true;
-      ui.updateGameStatus({
-        position: lastPosition,
-        nearbyCount: activeLocations.length,
-        unlockedCount: visitedLocationIds.size,
-      });
-      renderAreaList(lastPosition, { mode: 'all' });
-      ui.setSummary('Mod luar talian', 'Senarai cache', `${activeLocations.length} destinasi tersedia dari cache.`);
-      return;
-    }
-
-    ui.setSummary('Ralat rangkaian', 'Lokasi gagal dimuat', 'Sambungan ke API tidak berjaya.');
-    ui.renderNearbyLocations([], { mode: 'all' });
+    ui.setSummary('Ralat rangkaian', 'Data Supabase gagal dimuat', 'Sambungan ke API tidak berjaya.');
+    return false;
   }
 }
 
@@ -412,11 +314,17 @@ async function performLogin() {
       return;
     }
 
-    // Save session locally (server already validated via verifyAccessKey)
-    const savedSession = saveSession(result.data);
-    sessionToken = savedSession.sessionToken;
-    sessionExpiresAt = savedSession.sessionExpiresAt;
-    visitorName = savedSession.visitorName;
+    const nextSessionToken = result.data?.session_token || result.data?.sessionToken;
+    if (!nextSessionToken) {
+      throw new Error('Respons login tidak mengandungi token sesi.');
+    }
+
+    sessionToken = nextSessionToken;
+    const expiresInSeconds = Number(result.data.expires_in_seconds);
+    sessionExpiresAt = Number.isFinite(expiresInSeconds) && expiresInSeconds > 0
+      ? Date.now() + expiresInSeconds * 1000
+      : null;
+    visitorName = result.data.visitor_name || nextVisitorName;
 
     dom.visitorNameInput.value = '';
     dom.accessKeyInput.value = '';
@@ -424,9 +332,22 @@ async function performLogin() {
     if (ui.resetTabs) ui.resetTabs();
     ui.showScreen('map');
     ui.setAuthState(true, visitorName);
-    await enterMapScreen();
+    const locationsLoaded = await loadLocations({ force: true });
+    let mapStarted = true;
+    try {
+      await enterMapScreen();
+    } catch (mapError) {
+      mapStarted = false;
+      console.error('Login berjaya tetapi peta gagal dimulakan:', mapError);
+    }
 
-    ui.showToast('Sesi lawatan aktif.');
+    ui.showToast(
+      locationsLoaded && mapStarted
+        ? 'Sesi lawatan aktif.'
+        : locationsLoaded
+          ? 'Data lokasi aktif. Sesetengah fungsi peta masih dimuatkan.'
+          : 'Login berjaya tetapi data Supabase gagal dimuat. Cuba semula.',
+    );
 
     if (lastPosition) {
       maybeRefreshWeather(lastPosition, { force: true });
@@ -700,7 +621,6 @@ async function openLocationDetail(locationOrId, { source = 'manual' } = {}) {
           visit = checkInResult.data.visit;
           isVisited = true;
           visitedLocationIds.add(locationId);
-          saveVisitedLocationIds();
           syncLocationStates();
           ui.updateGameStatus({
             position: lastPosition,
@@ -1128,6 +1048,15 @@ function showLoginPrompt() {
 async function enterMapScreen() {
   ui.showScreen('map');
   ui.setAuthState(Boolean(sessionToken), visitorName);
+  if (!hasLoadedLocations || activeLocations.length === 0) {
+    ui.setLoadingNearby();
+    await loadLocations();
+  } else {
+    mapView.setLocations(activeLocations);
+    syncLocationStates();
+    renderAreaList(lastPosition, { mode: 'all' });
+  }
+
   if (!hasInitializedMap) {
     ui.setMapLoading(
       hasMapboxToken
@@ -1144,15 +1073,6 @@ async function enterMapScreen() {
   mapView.focusPangkor({ animate: false });
   setMap3dMode(isMap3dMode, { showToast: false });
   mapView.invalidateSize();
-
-  if (!hasLoadedLocations || activeLocations.length === 0) {
-    ui.setLoadingNearby();
-    await loadLocations();
-  } else {
-    mapView.setLocations(activeLocations);
-    syncLocationStates();
-    renderAreaList(lastPosition, { mode: 'all' });
-  }
 
   if (lastPosition) {
     mapView.updatePositionMarker(
@@ -1183,19 +1103,6 @@ function setMap3dMode(isEnabled, { showToast = true } = {}) {
   if (showToast) {
     ui.showToast(isMap3dMode ? 'Paparan GO 3D aktif.' : 'Paparan 2D aktif.');
   }
-}
-
-function loadVisitedLocationIds() {
-  try {
-    const stored = JSON.parse(window.localStorage.getItem(VISITED_LOCATION_IDS_KEY) || '[]');
-    return new Set(Array.isArray(stored) ? stored.map(String) : []);
-  } catch (error) {
-    return new Set();
-  }
-}
-
-function saveVisitedLocationIds() {
-  window.localStorage.setItem(VISITED_LOCATION_IDS_KEY, JSON.stringify([...visitedLocationIds]));
 }
 
 function activateGpsTimeoutFallback() {
@@ -1363,16 +1270,13 @@ function bindEvents() {
 }
 
 async function boot() {
-  if (sessionExpiresAt && sessionExpiresAt <= Date.now()) {
-    clearStoredSessionState();
-  }
-
-  // Register service worker for offline support
-  registerServiceWorker();
-
+  clearStoredSessionState();
   refreshIcons();
   ui.initLoginLanguage();
   ui.updateLoginButtonState();
+  ui.setAuthState(false);
+  ui.showScreen('login');
+  ui.setSessionStatus('Log masuk diperlukan');
   ui.updateGameStatus({
     position: null,
     nearbyCount: 0,
@@ -1383,22 +1287,18 @@ async function boot() {
   await loadConfig();
   await renderSocialProofBanner();
 
-  const hasValidSession = await hydrateStoredSession();
-  ui.setAuthState(hasValidSession, visitorName);
-
   // Initialise the AI chat widget on the map screen
   const mapScreen = document.getElementById('map-screen');
   initChatWidget(mapScreen);
-
-  if (hasValidSession) {
-    await enterMapScreen();
-  } else {
-    ui.showScreen('login');
-    ui.setSessionStatus('Log masuk diperlukan');
-  }
 }
 
 boot().catch((error) => {
   console.error('Aplikasi gagal dimulakan:', error);
   console.error('Stack:', error?.stack);
+});
+
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    window.location.reload();
+  }
 });
