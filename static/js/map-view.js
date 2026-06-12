@@ -1,6 +1,6 @@
-import { DEFAULT_CENTER, PANGKOR_BOUNDS } from './config.js?v=6';
-import { buildLocationPopupHtml, createLocationPinElement } from './components/location-pin.js?v=6';
-import { createUserMarkerElement } from './components/user-marker.js?v=6';
+import { DEFAULT_CENTER, PANGKOR_BOUNDS } from './config.js?v=9';
+import { buildLocationPopupHtml, createLocationPinElement } from './components/location-pin.js?v=9';
+import { createUserMarkerElement } from './components/user-marker.js?v=9';
 import {
   enrichLocationsWithNearby,
   getLocationCategory,
@@ -8,8 +8,8 @@ import {
   getLocationLatitude,
   getLocationLongitude,
   getLocationName,
-} from './location-data.js?v=6';
-import { getThemeColor } from './theme.js?v=6';
+} from './location-data.js?v=9';
+import { getThemeColor } from './theme.js?v=9';
 
 const DEFAULT_MAPBOX_STYLE = 'mapbox://styles/mapbox/streets-v12';
 const POKEMON_CAMERA = {

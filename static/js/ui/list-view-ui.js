@@ -1,6 +1,6 @@
-import { getLocationId, getLocationName, getLocationCategory, getDistanceLabel, getDistanceMeters } from '../location-data.js?v=6';
-import { getSocialMediaLinks } from '../api.js?v=6';
-import { refreshIcons } from '../dom.js?v=6';
+import { getLocationId, getLocationName, getLocationCategory, getDistanceLabel, getDistanceMeters, getLocationImageUrls } from '../location-data.js?v=11';
+import { getSocialMediaLinks } from '../api.js?v=11';
+import { refreshIcons } from '../dom.js?v=9';
 
 export function createListViewUi(dom, callbacks = {}) {
   let currentLocations = [];
@@ -40,25 +40,37 @@ export function createListViewUi(dom, callbacks = {}) {
     }
 
     locations.forEach(location => {
+      const imageUrls = getLocationImageUrls(location);
+      imageUrls.push('/static/assets/background.png');
+
       const card = document.createElement('div');
       card.className = 'list-card';
       card.setAttribute('role', 'button');
       card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', `Lihat ${getLocationName(location)}`);
+      card.dataset.locationId = getLocationId(location);
 
       const distance = getDistanceMeters(location);
-      const distanceLabel = Number.isFinite(distance) ? getDistanceLabel(location) : '';
-      const category = getLocationCategory(location) || 'Tarikan';
-      const imageUrl = getLocationImageUrl(location);
-      const imageStyle = imageUrl ? ` style="background-image: url('${escapeAttr(imageUrl)}')"` : '';
+      const distanceLabel = Number.isFinite(distance) ? getDistanceLabel(location) : 'Pulau Pangkor';
 
       card.innerHTML = `
-        <div class="list-card-image"${imageStyle}></div>
+        <div class="list-card-image">
+          <img class="list-card-img" src="${escapeAttr(imageUrls[0])}" alt="${escapeAttr(getLocationName(location))}" decoding="async" />
+        </div>
         <div class="list-card-content">
           <div class="list-card-title">${escapeHtml(getLocationName(location))}</div>
-          <div class="list-card-category">${escapeHtml(category)}</div>
           <div class="list-card-distance">${escapeHtml(distanceLabel)}</div>
         </div>
       `;
+
+      const image = card.querySelector('.list-card-img');
+      let imageUrlIndex = 0;
+      image?.addEventListener('error', () => {
+        imageUrlIndex += 1;
+        if (imageUrlIndex < imageUrls.length) {
+          image.setAttribute('src', imageUrls[imageUrlIndex]);
+        }
+      });
 
       const openLocation = () => {
         if (callbacks.onLocationClick) {
@@ -112,7 +124,7 @@ export function createListViewUi(dom, callbacks = {}) {
           card.target = '_blank';
           card.rel = 'noopener noreferrer';
           card.innerHTML = `
-            <span class="social-icon"><i data-lucide="${escapeAttr(link.icon)}"></i></span>
+            <span class="social-icon"><img src="${escapeAttr(link.icon)}" alt="${escapeAttr(link.platform)}"></span>
             <span class="social-info">
               <strong class="social-platform">${escapeHtml(link.platform)}</strong>
               <span class="social-handle">${escapeHtml(link.url.hostname)}</span>
@@ -121,6 +133,7 @@ export function createListViewUi(dom, callbacks = {}) {
           `;
           socialMediaList.appendChild(card);
         });
+        // no need to refresh lucide for platform icons, only for external icon
         refreshIcons();
       } else {
         socialMediaList.innerHTML = '<div class="social-state is-error">Ralat memuatkan media sosial.</div>';
@@ -205,17 +218,6 @@ export function createListViewUi(dom, callbacks = {}) {
   };
 }
 
-function getLocationImageUrl(location) {
-  const candidates = [
-    location?.image_url,
-    location?.featured_image_url,
-    location?.banner_image_url,
-    Array.isArray(location?.senarai_gambar) ? location.senarai_gambar[0] : '',
-  ];
-
-  return candidates.map(safeUrl).find(Boolean) || '';
-}
-
 function normalizeSocialLink(link) {
   const url = safeUrl(link?.url);
   if (!url) {
@@ -232,11 +234,12 @@ function normalizeSocialLink(link) {
 
 function getSocialIcon(platform, iconName) {
   const value = String(iconName || platform || '').toLowerCase();
-  if (value.includes('instagram')) return 'instagram';
-  if (value.includes('facebook')) return 'facebook';
-  if (value.includes('tiktok')) return 'music';
-  if (value.includes('thread')) return 'at-sign';
-  return 'link';
+  // map platform to image asset paths in static/assets/logos
+  if (value.includes('instagram')) return '/static/assets/logos/instagram.jpg';
+  if (value.includes('facebook')) return '/static/assets/logos/facebook.jpg';
+  if (value.includes('tiktok')) return '/static/assets/logos/tiktok.jpg';
+  if (value.includes('thread') || value.includes('threads')) return '/static/assets/logos/threads.jpg';
+  return '/static/assets/logos/main.jpeg';
 }
 
 function safeUrl(value) {

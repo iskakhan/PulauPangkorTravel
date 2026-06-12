@@ -94,7 +94,55 @@ class SupabaseRepository:
             .eq("is_active", True)
             .execute()
         )
-        return response.data or []
+        records = response.data or []
+
+        try:
+            destination_response = self.client.table("destinasi").select("*").execute()
+            destinations = destination_response.data or []
+        except Exception:
+            destinations = []
+
+        destinations_by_location_id = {
+            str(destination.get("location_id")): destination
+            for destination in destinations
+            if destination.get("location_id") not in (None, "")
+        }
+        destinations_by_id = {
+            str(destination.get("id")): destination
+            for destination in destinations
+            if destination.get("id") not in (None, "")
+        }
+
+        for record in records:
+            location_id = str(record.get("id") or record.get("location_id") or "")
+            destination_id = str(
+                record.get("destinasi_id")
+                or record.get("destination_id")
+                or ""
+            )
+            dest_item = (
+                destinations_by_location_id.get(location_id)
+                or destinations_by_id.get(destination_id)
+                or _first_related_record(record.get("destinasi"))
+            )
+
+            if dest_item:
+                record["destinasi"] = dest_item
+                record["featured_image_url"] = (
+                    dest_item.get("featured_image_url")
+                    or record.get("featured_image_url")
+                )
+                record["banner_image_url"] = (
+                    dest_item.get("banner_image_url")
+                    or record.get("banner_image_url")
+                )
+            record["image_url"] = (
+                record.get("featured_image_url")
+                or record.get("banner_image_url")
+                or _first_image(record.get("senarai_gambar"))
+                or _first_image(dest_item.get("senarai_gambar") if dest_item else None)
+            )
+        return records
 
     def get_nearby_locations(self, latitude, longitude, max_distance_meter):
         response = (
@@ -183,3 +231,17 @@ class SupabaseRepository:
             .execute()
         )
         return response.data or []
+
+
+def _first_related_record(value):
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, list):
+        return next((item for item in value if isinstance(item, dict)), None)
+    return None
+
+
+def _first_image(value):
+    if isinstance(value, list):
+        return next((item for item in value if item), None)
+    return value or None

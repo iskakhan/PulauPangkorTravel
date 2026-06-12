@@ -1,11 +1,11 @@
-import { buildDestinasiDetails } from './destinasi-details.js?v=6';
+import { buildDestinasiDetails } from './destinasi-details.js?v=9';
 import {
   getCategoryLabel,
   getDistanceLabel,
   getLocationDescription,
   getLocationId,
   getLocationName,
-} from '../location-data.js?v=6';
+} from '../location-data.js?v=9';
 
 export function buildLocationCardModalContent({
   location,
@@ -40,7 +40,7 @@ export function buildLocationCardModalContent({
     ${buildUnlockState({ card, isAuthenticated, isInside, unlocked, canUnlock })}
     ${buildLocationFacts(mergedLocation)}
     ${buildActionLinks(mergedLocation)}
-    ${buildMediaSection(media)}
+    ${buildMediaSection(media, mergedLocation)}
     ${buildDestinasiDetails(destinasi)}
   `;
 }
@@ -101,6 +101,51 @@ function buildLocationFacts(location) {
   `;
 }
 
+function buildPhotoCarousel(media, location) {
+  if (!media.images.length) {
+    return '';
+  }
+
+  const images = media.images.slice(0, 10);
+  if (images.length === 1) {
+    return `
+      <section class="detail-section">
+        <div class="photo-carousel single-image" aria-label="Galeri lokasi">
+          <img class="detail-hero-image" src="${escapeAttr(images[0])}" alt="${escapeAttr(getLocationName(location))}" loading="lazy" />
+        </div>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="detail-section">
+      <div class="detail-section-heading">
+        <span class="section-kicker">Media</span>
+        <h4>Galeri</h4>
+      </div>
+      <div class="photo-carousel" style="--total-images: ${images.length};" aria-label="Galeri foto lokasi">
+        <div class="carousel-container">
+          <div class="carousel-track" style="transform: translateX(0%);">
+            ${images.map((url, idx) => `
+              <div class="carousel-slide" data-index="${idx}">
+                <img src="${escapeAttr(url)}" alt="${escapeAttr(getLocationName(location))} ${idx + 1}" loading="lazy" />
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <button class="carousel-nav carousel-prev" type="button" aria-label="Sebelum gambar">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <button class="carousel-nav carousel-next" type="button" aria-label="Seterusnya gambar">
+          <i data-lucide="chevron-right"></i>
+        </button>
+        <div class="carousel-indicators">
+          ${images.map((_, idx) => `<button class="indicator ${idx === 0 ? 'active' : ''}" type="button" data-index="${idx}" aria-label="Gambar ${idx + 1}"></button>`).join('')}
+        </div>
+      </div>
+    </section>
+  `;
+}
 function buildActionLinks(location) {
   const locationId = getLocationId(location);
   const website = safeUrl(location.website_url || location.website);
@@ -128,7 +173,7 @@ function buildActionLinks(location) {
   return `<div class="detail-actions">${links.join('')}</div>`;
 }
 
-function buildMediaSection(media) {
+function buildMediaSection(media, location) {
   if (!media.images.length && !media.videos.length) {
     return `
       <section class="detail-section">
@@ -140,42 +185,37 @@ function buildMediaSection(media) {
     `;
   }
 
-  return `
+  const galleryHtml = media.images.length ? buildPhotoCarousel(media, location) : '';
+  const videoHtml = media.videos.length ? `
     <section class="detail-section">
       <div class="detail-section-heading">
-        <span class="section-kicker">Media</span>
-        <h4>Galeri</h4>
+        <span class="section-kicker">Video</span>
+        <h4>Video lokasi</h4>
       </div>
-      ${media.images.length ? `
-        <div class="gallery">
-          ${media.images.map((url, index) => `
-            <figure class="image-card">
-              <img src="${escapeAttr(url)}" alt="Gambar lokasi ${index + 1}" loading="lazy" />
-            </figure>
-          `).join('')}
-        </div>
-      ` : ''}
-      ${media.videos.length ? `
-        <div class="video-section">
-          <h4>Video</h4>
-          <div class="video-links">
-            ${media.videos.map((url, index) => `
-              <a class="video-link glass-control" href="${escapeAttr(url)}" target="_blank" rel="noreferrer noopener">
-                <span>Video ${index + 1}</span>
-                <i data-lucide="play-circle" aria-hidden="true"></i>
-              </a>
-            `).join('')}
-          </div>
-        </div>
-      ` : ''}
+      <div class="video-links">
+        ${media.videos.map((url, index) => `
+          <a class="video-link glass-control" href="${escapeAttr(url)}" target="_blank" rel="noreferrer noopener">
+            <span>Video ${index + 1}</span>
+            <i data-lucide="play-circle" aria-hidden="true"></i>
+          </a>
+        `).join('')}
+      </div>
     </section>
-  `;
+  ` : '';
+
+  return `${galleryHtml}${videoHtml}`;
 }
 
 function collectMedia(location, records, destinasi) {
   const images = [];
   const videos = [];
 
+  // include common location image fields and lists
+  addUrl(images, location.image_url);
+  addUrl(images, location.featured_image_url);
+  addUrl(images, location.banner_image_url);
+  addUrl(images, location.image);
+  addUrl(images, location.photo_url);
   addList(images, location.senarai_gambar);
   addList(videos, location.senarai_video);
   addUrl(images, destinasi?.featured_image_url);

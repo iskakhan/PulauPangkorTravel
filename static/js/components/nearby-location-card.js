@@ -5,7 +5,7 @@ import {
   getLocationId,
   getLocationName,
   isInsideGeofence,
-} from '../location-data.js?v=6';
+} from '../location-data.js?v=9';
 
 export function buildNearbyLocationCard(location) {
   const id = getLocationId(location);

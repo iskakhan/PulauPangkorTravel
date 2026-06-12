@@ -8,10 +8,11 @@ import {
   submitVisitFeedback,
   validateSession,
   verifyAccessKey,
-} from './api.js?v=7';
-import { PANGKOR_BOUNDS, PANGKOR_SYSTEM_BUFFER_M } from './config.js?v=7';
-import { getDomElements, refreshIcons } from './dom.js?v=7';
-import { formatTime } from './formatters.js?v=7';
+} from './api.js?v=11';
+import { PANGKOR_BOUNDS, PANGKOR_SYSTEM_BUFFER_M } from './config.js?v=9';
+import { getDomElements, refreshIcons } from './dom.js?v=9';
+import './image-optimizer.js?v=9';
+import { formatTime } from './formatters.js?v=9';
 import {
   getLocationId,
   getLocationName,
@@ -21,18 +22,21 @@ import {
   mergeLocationData,
   calculateDistanceMeters,
   sortLocationsByDistance,
-} from './location-data.js?v=7';
-import { createMapView } from './map-view.js?v=7';
-import { clearSession, loadSession, saveSession } from './session.js?v=7';
-import { createUi } from './ui/index.js?v=7';
-import { setLocale, getLocale, t, updateDomTranslations } from './i18n.js?v=7';
-import { initChatWidget } from './chat-widget.js?v=7';
+} from './location-data.js?v=11';
+import { createMapView } from './map-view.js?v=9';
+import { clearSession, loadSession, saveSession } from './session.js?v=9';
+import { createUi } from './ui/index.js?v=11';
+import { setLocale, getLocale, t, updateDomTranslations } from './i18n.js?v=9';
+import { initChatWidget } from './chat-widget.js?v=9';
+import { registerServiceWorker, cacheLocations, getCachedLocations } from './offline.js?v=11';
+import { fetchSocialProofStats, buildSocialProofBanner } from './social-proof.js?v=9';
 
 const NEARBY_RADIUS_M = 1000;
 const AUTO_POPUP_RADIUS_M = 50;
 const WEATHER_REFRESH_MS = 10 * 60 * 1000;
 const WEATHER_MOVE_REFRESH_M = 150;
 const VISITED_LOCATION_IDS_KEY = 'visited_location_ids';
+const GPS_TIMEOUT_MS = 30000;
 const GPS_HIGH_ACCURACY_OPTIONS = {
   enableHighAccuracy: true,
   maximumAge: 10000,
@@ -45,7 +49,7 @@ const GPS_FALLBACK_OPTIONS = {
 };
 const GPS_WATCH_OPTIONS = {
   enableHighAccuracy: true,
-  maximumAge: 1000,
+  maximumAge: 0,
   timeout: 30000,
 };
 const GPS_RETRY_MS = 8000;
@@ -74,8 +78,12 @@ let hasDismissedOutsideAreaWarning = false;
 let hasReceivedGpsFix = false;
 let isRequestingGpsFix = false;
 let gpsRetryTimer = null;
+let gpsTimeoutTimer = null;
+let gpsTimeoutUsed = false;
 let hasMapboxToken = false;
 let hasInitializedMap = false;
+let locationsLoadPromise = null;
+let loginPromise = null;
 let sessionTimer = null;
 let watchId = null;
 
@@ -143,15 +151,34 @@ async function loadConfig() {
   }
 }
 
+async function renderSocialProofBanner() {
+  if (!dom.socialProofBannerContainer) {
+    return;
+  }
+
+  try {
+    const stats = await fetchSocialProofStats();
+    dom.socialProofBannerContainer.innerHTML = buildSocialProofBanner(stats);
+    dom.socialProofBannerContainer.classList.remove('hidden');
+  } catch (error) {
+    console.warn('[Social Proof] Gagal paparkan banner:', error);
+  }
+}
+
 async function hydrateStoredSession() {
   const token = getSessionToken();
   if (!token) {
     return false;
   }
 
+  if (sessionExpiresAt && sessionExpiresAt > Date.now()) {
+    return true;
+  }
+
   try {
     const result = await validateSession(token);
-    if (!result.ok || !result.data.authenticated) {
+
+    if (!result.ok || !result.data?.authenticated) {
       clearStoredSessionState();
       return false;
     }
@@ -165,9 +192,8 @@ async function hydrateStoredSession() {
     visitorName = savedSession.visitorName;
     return true;
   } catch (error) {
-    console.error('Gagal menyemak sesi:', error);
-    clearStoredSessionState();
-    return false;
+    console.warn('[Session] Semakan sesi gagal sementara, menggunakan sesi tersimpan:', error);
+    return Boolean(sessionToken);
   }
 }
 
@@ -179,9 +205,48 @@ function clearStoredSessionState() {
 }
 
 async function loadLocations() {
+  if (locationsLoadPromise) {
+    return locationsLoadPromise;
+  }
+
+  locationsLoadPromise = loadLocationsOnce();
   try {
-    const result = await getActiveLocations();
+    return await locationsLoadPromise;
+  } finally {
+    locationsLoadPromise = null;
+  }
+}
+
+async function loadLocationsOnce() {
+  try {
+    const result = await getActiveLocationsWithRetry();
     if (!result.ok) {
+      let cachedLocations = [];
+      try {
+        cachedLocations = await getCachedLocations();
+      } catch (cacheError) {
+        console.warn('[Offline] Gagal baca cache lokasi:', cacheError);
+      }
+
+      if (cachedLocations.length) {
+        activeLocations = cachedLocations;
+        locationsById = new Map(activeLocations.map((location) => [getLocationId(location), location]));
+        mapView.setLocations(activeLocations);
+        if (ui.setListLocations) {
+          ui.setListLocations(activeLocations);
+        }
+        syncLocationStates();
+        hasLoadedLocations = true;
+        ui.updateGameStatus({
+          position: lastPosition,
+          nearbyCount: activeLocations.length,
+          unlockedCount: visitedLocationIds.size,
+        });
+        renderAreaList(lastPosition, { mode: 'all' });
+        ui.setSummary('Mod luar talian', 'Senarai cache', `${activeLocations.length} destinasi tersedia dari cache.`);
+        return;
+      }
+
       ui.setSummary('Lokasi', 'Senarai belum tersedia', result.data.error || 'Semak sambungan server lokasi.');
       ui.renderNearbyLocations([], { mode: 'all' });
       return;
@@ -202,11 +267,73 @@ async function loadLocations() {
     });
     renderAreaList(lastPosition, { mode: 'all' });
     ui.setSummary('Peta aktif', 'Jelajah Pangkor', `${activeLocations.length} kawasan dan lokasi menarik dimuat.`);
+
+    if (activeLocations.length) {
+      cacheLocations(activeLocations).catch((cacheError) => {
+        console.warn('[Offline] Cache lokasi gagal:', cacheError);
+      });
+    }
   } catch (error) {
     console.error(error);
+    let cachedLocations = [];
+    try {
+      cachedLocations = await getCachedLocations();
+    } catch (cacheError) {
+      console.warn('[Offline] Gagal baca cache lokasi:', cacheError);
+    }
+
+    if (cachedLocations.length) {
+      activeLocations = cachedLocations;
+      locationsById = new Map(activeLocations.map((location) => [getLocationId(location), location]));
+      mapView.setLocations(activeLocations);
+      if (ui.setListLocations) {
+        ui.setListLocations(activeLocations);
+      }
+      syncLocationStates();
+      hasLoadedLocations = true;
+      ui.updateGameStatus({
+        position: lastPosition,
+        nearbyCount: activeLocations.length,
+        unlockedCount: visitedLocationIds.size,
+      });
+      renderAreaList(lastPosition, { mode: 'all' });
+      ui.setSummary('Mod luar talian', 'Senarai cache', `${activeLocations.length} destinasi tersedia dari cache.`);
+      return;
+    }
+
     ui.setSummary('Ralat rangkaian', 'Lokasi gagal dimuat', 'Sambungan ke API tidak berjaya.');
     ui.renderNearbyLocations([], { mode: 'all' });
   }
+}
+
+async function getActiveLocationsWithRetry(maxAttempts = 3) {
+  let lastResult = null;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      lastResult = await getActiveLocations();
+      const locations = lastResult.data?.locations;
+      if (lastResult.ok && Array.isArray(locations) && locations.length > 0) {
+        return lastResult;
+      }
+    } catch (error) {
+      lastError = error;
+    }
+
+    if (attempt < maxAttempts) {
+      await wait(300 * attempt);
+    }
+  }
+
+  if (lastResult) {
+    return lastResult;
+  }
+  throw lastError || new Error('Lokasi Supabase gagal dimuat.');
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
 function getAreaList(position = lastPosition, { maxDistanceM = null } = {}) {
@@ -226,10 +353,39 @@ function getAreaList(position = lastPosition, { maxDistanceM = null } = {}) {
 }
 
 function renderAreaList(position = lastPosition, { mode = 'all' } = {}) {
-  ui.renderNearbyLocations(getAreaList(position), { mode });
+  const locations = getAreaList(position);
+
+  if (!locations || locations.length === 0) {
+    let emptyMessage = 'Tiada lokasi dijumpai.';
+    if (!hasLoadedLocations) {
+      emptyMessage = 'Memuatkan senarai lokasi...';
+    } else if (!position) {
+      emptyMessage = 'Menunggu lokasi GPS untuk menampilkan destinasi terdekat.';
+    } else if (lastPosition && isOutsidePangkorArea) {
+      emptyMessage = 'Anda berada di luar Pangkor. Tiada lokasi yang tersedia di kawasan ini.';
+    } else if (activeLocations.length > 0) {
+      emptyMessage = 'Tidak ada destinasi dalam jarak 1km. Berjalan lebih jauh atau lihat semua lokasi.';
+    }
+    ui.renderNearbyLocations([], { mode, emptyMessage });
+  } else {
+    ui.renderNearbyLocations(locations, { mode });
+  }
 }
 
 async function handleLogin() {
+  if (loginPromise) {
+    return loginPromise;
+  }
+
+  loginPromise = performLogin();
+  try {
+    return await loginPromise;
+  } finally {
+    loginPromise = null;
+  }
+}
+
+async function performLogin() {
   ui.hideLoginError();
   const nextVisitorName = dom.visitorNameInput.value.trim();
   const accessKey = dom.accessKeyInput.value.trim();
@@ -256,6 +412,7 @@ async function handleLogin() {
       return;
     }
 
+    // Save session locally (server already validated via verifyAccessKey)
     const savedSession = saveSession(result.data);
     sessionToken = savedSession.sessionToken;
     sessionExpiresAt = savedSession.sessionExpiresAt;
@@ -268,10 +425,10 @@ async function handleLogin() {
     ui.showScreen('map');
     ui.setAuthState(true, visitorName);
     await enterMapScreen();
+
     ui.showToast('Sesi lawatan aktif.');
 
     if (lastPosition) {
-      await refreshNearby(lastPosition);
       maybeRefreshWeather(lastPosition, { force: true });
     }
   } catch (error) {
@@ -309,7 +466,7 @@ async function refreshNearby(position) {
       const displayLocations = getAreaList(position);
       currentLocation = displayLocations[0] || null;
       ui.renderNearbyLocations(displayLocations, { mode: 'all' });
-      ui.setSummary('Radar fallback', 'Kawasan sekitar', result.data.error || 'Senarai lokasi disusun terus dari peta.');
+      ui.setSummary('Radar fallback', 'Lokasi', result.data.error || 'Senarai lokasi disusun terus dari peta.');
       return;
     }
 
@@ -359,7 +516,7 @@ async function refreshNearby(position) {
     } else {
       currentLocation = displayLocations[0] || null;
       ui.updateNearestSummary(currentLocation);
-      ui.setSummary('Radar fallback', 'Kawasan sekitar', 'API nearby tidak dapat dicapai, senarai peta masih boleh digunakan.');
+      ui.setSummary('Radar fallback', 'Lokasi', 'API nearby tidak dapat dicapai, senarai peta masih boleh digunakan.');
     }
   } finally {
     isCheckingNearby = false;
@@ -593,6 +750,7 @@ function handlePosition(position) {
   hasReceivedGpsFix = true;
   isRequestingGpsFix = false;
   window.clearTimeout(gpsRetryTimer);
+  window.clearTimeout(gpsTimeoutTimer); // Cancel GPS timeout on first fix
 
   ui.setAccuracy(accuracy);
   ui.updateGameStatus({
@@ -644,7 +802,9 @@ function handlePosition(position) {
   ui.setLocationStatus(`GPS aktif · ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
   mapView.updatePositionMarker(latitude, longitude, accuracy, { heading, speed });
   updateNavigationProgress(lastPosition);
-  refreshNearby(lastPosition);
+  if (hasLoadedLocations) {
+    refreshNearby(lastPosition);
+  }
   maybeRefreshWeather(lastPosition);
 }
 
@@ -794,8 +954,10 @@ function startTracking({ force = false } = {}) {
     stopTracking();
   }
 
+  gpsTimeoutUsed = false;
   ui.setLocationStatus('Mengaktifkan GPS...');
   ui.setSummary('GPS', 'Mencari lokasi', 'Menunggu isyarat lokasi semasa.');
+  scheduleGpsTimeout(); // Start GPS timeout guard
   requestGpsFix(GPS_HIGH_ACCURACY_OPTIONS);
   watchId = navigator.geolocation.watchPosition(
     handlePosition,
@@ -806,6 +968,7 @@ function startTracking({ force = false } = {}) {
 
 function stopTracking() {
   window.clearTimeout(gpsRetryTimer);
+  window.clearTimeout(gpsTimeoutTimer);
   gpsRetryTimer = null;
   isRequestingGpsFix = false;
   if (watchId !== null) {
@@ -875,14 +1038,13 @@ function requestLogout() {
     return;
   }
 
-  performLogout('Sila log masuk untuk melihat peta.');
+  ui.showScreen('login');
 }
 
 function performLogout(message) {
   clearStoredSessionState();
   window.clearInterval(sessionTimer);
   hasReceivedGpsFix = false;
-  hasLoadedLocations = false;
   lastPosition = null;
   lastWeatherPosition = null;
   isOutsidePangkorArea = false;
@@ -905,14 +1067,13 @@ function performLogout(message) {
   }
   ui.updateGameStatus({
     position: lastPosition,
-    nearbyCount: nearbyLocations.length,
+    nearbyCount: activeLocations.length,
     unlockedCount: visitedLocationIds.size,
   });
   if (ui.resetTabs) ui.resetTabs();
   renderAreaList(lastPosition, { mode: 'all' });
   mapView.setFollowUser(false);
-  ui.hideLoginError();
-  if (message && /sesi tamat|sila log masuk|log masuk/i.test(message)) {
+  if (message) {
     ui.showLoginError(message);
   }
 }
@@ -983,7 +1144,6 @@ async function enterMapScreen() {
   mapView.focusPangkor({ animate: false });
   setMap3dMode(isMap3dMode, { showToast: false });
   mapView.invalidateSize();
-  startTracking();
 
   if (!hasLoadedLocations || activeLocations.length === 0) {
     ui.setLoadingNearby();
@@ -993,6 +1153,18 @@ async function enterMapScreen() {
     syncLocationStates();
     renderAreaList(lastPosition, { mode: 'all' });
   }
+
+  if (lastPosition) {
+    mapView.updatePositionMarker(
+      lastPosition.latitude,
+      lastPosition.longitude,
+      lastPosition.accuracy,
+      { heading: lastPosition.heading, speed: lastPosition.speed },
+    );
+    await refreshNearby(lastPosition);
+  }
+
+  startTracking();
 
   if (sessionToken) {
     startSessionTimer();
@@ -1026,6 +1198,38 @@ function saveVisitedLocationIds() {
   window.localStorage.setItem(VISITED_LOCATION_IDS_KEY, JSON.stringify([...visitedLocationIds]));
 }
 
+function activateGpsTimeoutFallback() {
+  if (gpsTimeoutUsed) {
+    return; // Already triggered
+  }
+  gpsTimeoutUsed = true;
+  console.warn('[GPS] Timeout exceeded - showing fallback UI');
+
+  ui.showToast('GPS ambil masa lama. Menunjukkan semua destinasi.');
+  ui.setLocationStatus('GPS timeout - menunjukkan semua destinasi.');
+  ui.setSummary(
+    'GPS Timeout',
+    'Menampilkan semua lokasi',
+    'Lokasi live tidak tersedia, namun semua destinasi Pangkor ditampilkan.'
+  );
+
+  // Show all locations without distance filtering
+  const displayLocations = sortLocationsByDistance(activeLocations.map((loc) =>
+    withLiveLocationState(mergeLocationData(loc), lastPosition)
+  ));
+  ui.renderNearbyLocations(displayLocations, { mode: 'all' });
+  renderAreaList(null, { mode: 'all' });
+}
+
+function scheduleGpsTimeout() {
+  window.clearTimeout(gpsTimeoutTimer);
+  gpsTimeoutTimer = window.setTimeout(() => {
+    if (!hasReceivedGpsFix && watchId !== null) {
+      activateGpsTimeoutFallback();
+    }
+  }, GPS_TIMEOUT_MS);
+}
+
 function bindEvents() {
   dom.loginForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -1046,21 +1250,29 @@ function bindEvents() {
     ui.updateLoginButtonState();
   });
 
-  dom.clearKeyButton.addEventListener('click', () => {
-    dom.accessKeyInput.value = '';
-    dom.accessKeyInput.focus();
-    ui.hideLoginError();
-    ui.updateLoginButtonState();
-  });
+  if (dom.clearKeyButton) {
+    dom.clearKeyButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      dom.accessKeyInput.value = '';
+      dom.accessKeyInput.focus();
+      ui.hideLoginError();
+      ui.updateLoginButtonState();
+    });
+  }
 
-  dom.useTestKeyButton.addEventListener('click', () => {
-    dom.accessKeyInput.value = dom.demoKeyValue.textContent.trim();
-    dom.accessKeyInput.focus();
-    ui.hideLoginError();
-    ui.updateLoginButtonState();
-  });
+  if (dom.useTestKeyButton && dom.demoKeyValue) {
+    dom.useTestKeyButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      dom.accessKeyInput.value = dom.demoKeyValue.textContent.trim();
+      dom.accessKeyInput.focus();
+      ui.hideLoginError();
+      ui.updateLoginButtonState();
+    });
+  }
 
-  dom.loginPromptButton.addEventListener('click', showLoginPrompt);
+  dom.loginPromptButton?.addEventListener('click', showLoginPrompt);
   dom.logoutButton.addEventListener('click', requestLogout);
   dom.feedbackForm.addEventListener('submit', handleFeedbackSubmit);
   dom.feedbackCloseButton.addEventListener('click', ui.hideFeedbackModal);
@@ -1155,10 +1367,12 @@ async function boot() {
     clearStoredSessionState();
   }
 
+  // Register service worker for offline support
+  registerServiceWorker();
+
   refreshIcons();
   ui.initLoginLanguage();
   ui.updateLoginButtonState();
-  ui.setAuthState(Boolean(sessionToken), visitorName);
   ui.updateGameStatus({
     position: null,
     nearbyCount: 0,
@@ -1167,6 +1381,7 @@ async function boot() {
   ui.setWeatherUnavailable('Menunggu lokasi.');
   bindEvents();
   await loadConfig();
+  await renderSocialProofBanner();
 
   const hasValidSession = await hydrateStoredSession();
   ui.setAuthState(hasValidSession, visitorName);
@@ -1185,4 +1400,5 @@ async function boot() {
 
 boot().catch((error) => {
   console.error('Aplikasi gagal dimulakan:', error);
+  console.error('Stack:', error?.stack);
 });

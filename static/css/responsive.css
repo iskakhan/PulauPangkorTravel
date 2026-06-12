@@ -46,10 +46,6 @@
     min-height: clamp(132px, 25svh, 190px);
   }
 
-  .trainer-status {
-    top: calc(92px + var(--safe-top));
-  }
-
   .nearby-tray {
     bottom: calc(162px + var(--safe-bottom));
     padding: 10px;

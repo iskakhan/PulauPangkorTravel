@@ -1,0 +1,215 @@
+/* Photo Carousel for Destination Modal */
+.photo-carousel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f0f0f0;
+  aspect-ratio: 1 / 0.75;
+  margin-bottom: 16px;
+}
+
+.carousel-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.carousel-track {
+  display: flex;
+  width: calc(100% * var(--total-images, 1));
+  height: 100%;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-slide {
+  flex: 0 0 calc(100% / var(--total-images, 1));
+  width: calc(100% / var(--total-images, 1));
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  transition: all 200ms ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-nav:hover {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.carousel-nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.carousel-prev {
+  left: 12px;
+}
+
+.carousel-next {
+  right: 12px;
+}
+
+.carousel-nav svg {
+  width: 20px;
+  height: 20px;
+}
+
+.carousel-indicators {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  padding: 8px 12px;
+  border-radius: 20px;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 200ms ease;
+  padding: 0;
+}
+
+.indicator.active {
+  background: rgba(255, 255, 255, 0.95);
+  width: 24px;
+  border-radius: 4px;
+}
+
+.indicator:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/* Blur-up placeholder effect */
+.image-loading {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  animation: blurup 500ms ease-in forwards;
+}
+
+@keyframes blurup {
+  from {
+    filter: blur(20px);
+    opacity: 0.7;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+img[data-src] {
+  animation: fadeIn 300ms ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Location facts with better styling */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-grid dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(6, 63, 70, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-grid dd {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #051316;
+  margin: 0;
+}
+
+/* Phone/Email action links */
+.contact-actions {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(6, 63, 70, 0.2);
+  background: rgba(20, 184, 166, 0.08);
+  color: #0f766e;
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.contact-link:hover {
+  background: rgba(20, 184, 166, 0.15);
+  border-color: rgba(6, 63, 70, 0.4);
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+}
+
+.contact-link svg {
+  width: 16px;
+  height: 16px;
+}

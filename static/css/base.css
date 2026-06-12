@@ -38,7 +38,8 @@ button:disabled {
   position: relative;
   min-height: 100svh;
   margin: 0 auto;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--color-page);
 }
 

@@ -61,7 +61,9 @@ def check_location():
 @api_blueprint.get("/locations")
 def locations():
     service = current_app.extensions["location_game_service"]
-    return jsonify({"locations": service.list_active_locations()})
+    response = jsonify({"locations": service.list_active_locations()})
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    return response
 
 
 @api_blueprint.get("/social-media")

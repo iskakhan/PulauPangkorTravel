@@ -1,5 +1,5 @@
-import { API_BASE } from './config.js?v=6';
-import { getSupabaseAccessToken } from './auth.js?v=6';
+import { API_BASE } from './config.js?v=9';
+import { getSupabaseAccessToken } from './auth.js?v=9';
 
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
 const WEATHER_FIELDS = [
@@ -111,7 +111,7 @@ export async function checkLocation({ longitude, latitude, sessionToken }) {
 }
 
 export async function getActiveLocations() {
-  const response = await fetch(`${API_BASE}/locations`);
+  const response = await fetch(`${API_BASE}/locations`, { cache: 'no-store' });
   return {
     ok: response.ok,
     status: response.status,

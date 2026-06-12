@@ -1,4 +1,4 @@
-import { SESSION_EXPIRES_KEY, SESSION_TOKEN_KEY, SESSION_VISITOR_NAME_KEY } from './config.js?v=6';
+import { SESSION_EXPIRES_KEY, SESSION_TOKEN_KEY, SESSION_VISITOR_NAME_KEY } from './config.js?v=9';
 
 export function loadSession() {
   migrateSessionStorage();

@@ -1,7 +1,7 @@
-import { formatDistance } from '../formatters.js?v=6';
-import { buildNearbyLocationCard } from '../components/nearby-location-card.js?v=6';
-import { showUnlockAnimation as playUnlockAnimation } from '../components/unlock-animation.js?v=6';
-import { getLocationName } from '../location-data.js?v=6';
+import { formatDistance } from '../formatters.js?v=9';
+import { buildNearbyLocationCard } from '../components/nearby-location-card.js?v=9';
+import { showUnlockAnimation as playUnlockAnimation } from '../components/unlock-animation.js?v=9';
+import { getLocationName } from '../location-data.js?v=9';
 
 export function createMapPanelUi(dom) {
   function setSummary(kicker, title, description) {
@@ -63,26 +63,32 @@ export function createMapPanelUi(dom) {
   }
 
   function setAuthState(isAuthenticated, visitorName = '') {
-    dom.authStatus.textContent = isAuthenticated ? visitorName || 'Pelawat aktif' : 'Log masuk diperlukan';
-    dom.logoutButton.classList.toggle('hidden', !isAuthenticated);
-    dom.loginPromptButton.classList.toggle('hidden', isAuthenticated);
+    if (dom.authStatus) {
+      dom.authStatus.textContent = isAuthenticated ? visitorName || 'Pelawat aktif' : 'Log masuk diperlukan';
+    }
+    dom.logoutButton?.classList.toggle('hidden', !isAuthenticated);
+    dom.loginPromptButton?.classList.toggle('hidden', isAuthenticated);
   }
 
   function updateGameStatus({ position, nearbyCount, unlockedCount }) {
-    if (position) {
-      dom.userCoordinates.textContent = `${position.latitude.toFixed(5)}, ${position.longitude.toFixed(5)}`;
-    } else {
-      dom.userCoordinates.textContent = 'Mencari GPS';
+    if (dom.userCoordinates) {
+      dom.userCoordinates.textContent = position
+        ? `${position.latitude.toFixed(5)}, ${position.longitude.toFixed(5)}`
+        : '';
     }
 
-    dom.nearbyCount.textContent = String(nearbyCount || 0);
-    dom.unlockedCount.textContent = String(unlockedCount || 0);
+    if (dom.nearbyCount) {
+      dom.nearbyCount.textContent = String(nearbyCount || 0);
+    }
+    if (dom.unlockedCount) {
+      dom.unlockedCount.textContent = String(unlockedCount || 0);
+    }
   }
 
   function setWeatherLoading() {
-    dom.weatherTemperature.textContent = 'Cuaca --';
-    dom.weatherSummary.textContent = 'Mengemas kini cuaca semasa';
-    dom.weatherWind.textContent = 'Angin --';
+    if (dom.weatherTemperature) dom.weatherTemperature.textContent = 'Cuaca --';
+    if (dom.weatherSummary) dom.weatherSummary.textContent = 'Mengemas kini cuaca semasa';
+    if (dom.weatherWind) dom.weatherWind.textContent = 'Angin --';
   }
 
   function setWeather(weather) {
@@ -92,19 +98,19 @@ export function createMapPanelUi(dom) {
     const humidity = Number.isFinite(weather.humidity_percent) ? `${weather.humidity_percent}% lembap` : '';
     const rain = Number(weather.precipitation_mm) > 0 ? ` · Hujan ${weather.precipitation_mm} mm` : '';
 
-    dom.weatherTemperature.textContent = temperature === null ? 'Cuaca semasa' : `${temperature}°C`;
-    dom.weatherSummary.textContent = [
+    if (dom.weatherTemperature) dom.weatherTemperature.textContent = temperature === null ? 'Cuaca semasa' : `${temperature}°C`;
+    if (dom.weatherSummary) dom.weatherSummary.textContent = [
       weather.summary || 'Cuaca semasa',
       feelsLike === null ? '' : `rasa ${feelsLike}°C`,
       humidity,
     ].filter(Boolean).join(' · ') + rain;
-    dom.weatherWind.textContent = windSpeed === null ? 'Angin --' : `Angin ${windSpeed} km/j`;
+    if (dom.weatherWind) dom.weatherWind.textContent = windSpeed === null ? 'Angin --' : `Angin ${windSpeed} km/j`;
   }
 
   function setWeatherUnavailable(message = 'Cuaca tidak tersedia') {
-    dom.weatherTemperature.textContent = 'Cuaca --';
-    dom.weatherSummary.textContent = message;
-    dom.weatherWind.textContent = 'Angin --';
+    if (dom.weatherTemperature) dom.weatherTemperature.textContent = 'Cuaca --';
+    if (dom.weatherSummary) dom.weatherSummary.textContent = message;
+    if (dom.weatherWind) dom.weatherWind.textContent = 'Angin --';
   }
 
   function renderNearbyLocations(locations, { mode = 'nearby' } = {}) {
@@ -113,12 +119,12 @@ export function createMapPanelUi(dom) {
 
     if (visibleLocations.length === 0) {
       dom.nearbyLocationList.innerHTML = '<p class="nearby-empty">Lokasi belum dimuat. Cuba semula selepas peta stabil.</p>';
-      dom.nearbyHeading.textContent = mode === 'all' ? 'Kawasan sekitar' : 'Tiada lokasi dekat';
+      dom.nearbyHeading.textContent = mode === 'all' ? 'Lokasi' : 'Tiada lokasi dekat';
       return;
     }
 
     dom.nearbyHeading.textContent = mode === 'all'
-      ? `${visibleLocations.length} kawasan pilihan`
+      ? `${visibleLocations.length} lokasi`
       : `${visibleLocations.length} lokasi terdekat`;
     visibleLocations.forEach((location) => {
       dom.nearbyLocationList.appendChild(buildNearbyLocationCard(location));
@@ -126,8 +132,8 @@ export function createMapPanelUi(dom) {
   }
 
   function setLoadingNearby() {
-    dom.nearbyHeading.textContent = 'Memuat kawasan';
-    dom.nearbyLocationList.innerHTML = '<p class="nearby-empty">Menyediakan senarai pantai, jeti dan tarikan sekitar...</p>';
+    dom.nearbyHeading.textContent = 'Memuat lokasi';
+    dom.nearbyLocationList.innerHTML = '<p class="nearby-empty">Menyediakan senarai pantai, jeti dan tarikan...</p>';
   }
 
   function showUnlockAnimation({ title, message }) {

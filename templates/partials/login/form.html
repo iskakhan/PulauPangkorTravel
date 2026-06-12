@@ -17,13 +17,13 @@
     </select>
   </div>
 
-  <div id="demo-key-card" class="demo-key glass-control">
+  <div id="demo-key-card" class="demo-key glass-control hidden">
     <span class="demo-key-icon" aria-hidden="true">
       <i data-lucide="key-round"></i>
     </span>
     <div>
       <span id="demo-key-label">Test key</span>
-      <code id="demo-key-value">PANGKOR-IOS26-TEST</code>
+      <code id="demo-key-value"></code>
     </div>
     <button id="use-test-key-button" class="small-action" type="button">
       <i data-lucide="copy-check"></i>
@@ -81,7 +81,7 @@
   </button>
 
   <div class="sponsor-section">
-    <p class="sponsor-label">Ditaja oleh / Sponsored by</p>
+    <p class="sponsor-label">Sponsored by</p>
     <div class="sponsor-logos">
       <div class="sponsor-logo-item">
         <img src="{{ url_for('static', filename='assets/logos/sponsor1.jpeg') }}" alt="Sponsor 1" loading="lazy" />

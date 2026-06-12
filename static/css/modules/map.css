@@ -191,7 +191,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.09);
 }
 
 .topbar-copy {
@@ -260,7 +264,11 @@
   left: 12px;
   right: 12px;
   bottom: calc(12px + var(--safe-bottom));
-  padding: 14px;
+  padding: 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
 }
 
 .summary-meta {

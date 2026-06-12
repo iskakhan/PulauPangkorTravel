@@ -1,4 +1,4 @@
-import { formatDistance } from './formatters.js?v=6';
+import { formatDistance } from './formatters.js?v=9';
 
 const CATEGORY_ALIASES = {
   pantai: 'beach',
@@ -74,6 +74,36 @@ export function getDistanceLabel(location) {
   return Number.isFinite(distance) ? formatDistance(distance) : 'Pulau Pangkor';
 }
 
+export function getLocationImageUrl(location) {
+  return getLocationImageUrls(location)[0] || '';
+}
+
+export function getLocationImageUrls(location) {
+  const destinasi = getRelatedDestination(location?.destinasi);
+  const candidates = [
+    location?.featured_image_url,
+    location?.banner_image_url,
+    location?.image_url,
+    location?.image,
+    location?.photo_url,
+    destinasi?.featured_image_url,
+    destinasi?.banner_image_url,
+    Array.isArray(location?.senarai_gambar) ? location.senarai_gambar[0] : '',
+    Array.isArray(location?.images) ? location.images[0] : '',
+    Array.isArray(destinasi?.senarai_gambar) ? destinasi.senarai_gambar[0] : '',
+    Array.isArray(destinasi?.images) ? destinasi.images[0] : '',
+  ];
+
+  return [...new Set(candidates.map(safeUrl).filter(Boolean))];
+}
+
+function getRelatedDestination(value) {
+  if (Array.isArray(value)) {
+    return value.find((item) => item && typeof item === 'object') || null;
+  }
+  return value && typeof value === 'object' ? value : null;
+}
+
 export function isInsideGeofence(location) {
   return Boolean(location?.is_inside_geofence || location?.inside_geofence || location?.is_unlockable);
 }
@@ -128,6 +158,19 @@ export function sortLocationsByDistance(locations, userPosition) {
     const secondDistance = getDistanceMeters(second) ?? calculateDistanceMeters(userPosition, second) ?? Number.POSITIVE_INFINITY;
     return firstDistance - secondDistance;
   });
+}
+
+function safeUrl(value) {
+  if (!value) {
+    return '';
+  }
+
+  try {
+    const url = new URL(String(value), window.location.href);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : '';
+  } catch (error) {
+    return '';
+  }
 }
 
 function parseCoordinate(value) {

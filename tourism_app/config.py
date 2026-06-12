@@ -11,7 +11,7 @@ class Config:
     SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY")
 
     KEY_TTL = timedelta(minutes=int(os.environ.get("KEY_TTL_MINUTES", "5")))
-    SESSION_TTL = timedelta(minutes=int(os.environ.get("SESSION_TTL_MINUTES", "30")))
+    SESSION_TTL = timedelta(minutes=int(os.environ.get("SESSION_TTL_MINUTES", "150")))
     GEOFENCE_RADIUS_METER = float(os.environ.get("GEOFENCE_RADIUS_METER", "50.0"))
     WEATHER_TIMEOUT_SECONDS = int(os.environ.get("WEATHER_TIMEOUT_SECONDS", "8"))
     MAPBOX_ACCESS_TOKEN = os.environ.get("MAPBOX_ACCESS_TOKEN", "")
